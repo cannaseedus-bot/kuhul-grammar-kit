@@ -1,0 +1,88 @@
+{
+  "language": "typescript",
+  "version": "1.0",
+  "adapter_layer": "AST",
+  "ast_name": "Abstract Syntax Transpiler",
+  "downstream_execution_authority": "K'UHUL",
+  "tokens": [
+    {
+      "type": "import_decl",
+      "pattern": "import\\s+(?:type\\s+)?(?:\\{[^}]+\\}|\\*\\s+as\\s+\\w+|\\w+)\\s+from\\s+['\"]([^'\"]+)['\"]\\s*;",
+      "captures": ["module"],
+      "edge_kind": "@imports"
+    },
+    {
+      "type": "interface_decl",
+      "pattern": "interface\\s+(\\w+)\\s*\\{",
+      "captures": ["name"],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "property_decl",
+      "pattern": "(\\w+)\\s*:\\s*([\\w\\[\\]\\|<>, ]+)\\s*;",
+      "captures": ["name", "type"],
+      "edge_kind": "@declares"
+    },
+    {
+      "type": "function_decl",
+      "pattern": "function\\s+(\\w+)\\s*\\(([^)]*)\\)\\s*(?::\\s*([\\w\\[\\]\\|<>, ]+))?\\s*\\{",
+      "captures": ["name", "params", "return_type"],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "parameter",
+      "pattern": "(\\w+)\\s*:\\s*([\\w\\[\\]\\|<>, ]+)",
+      "captures": ["name", "type"],
+      "edge_kind": "@declares"
+    },
+    {
+      "type": "variable_decl",
+      "pattern": "(?:const|let|var)\\s+(\\w+)\\s*(?::\\s*([\\w\\[\\]\\|<>, ]+))?\\s*=\\s*([^;]+);",
+      "captures": ["name", "type", "value"],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "call_expr",
+      "pattern": "([\\w\\.]+)\\s*\\(([^;)]*)\\)",
+      "captures": ["callee", "args"],
+      "edge_kind": "@calls"
+    },
+    {
+      "type": "type_ref",
+      "pattern": ":\\s*([A-Z]\\w*)\\b",
+      "captures": ["name"],
+      "edge_kind": "@requires"
+    },
+    {
+      "type": "object_literal",
+      "pattern": "\\{[^{}]*\\}",
+      "captures": [],
+      "edge_kind": "@uses"
+    },
+    {
+      "type": "slot",
+      "pattern": "\\{\\{([\\w]+)\\}\\}",
+      "captures": ["name"],
+      "edge_kind": "@requires",
+      "note": "Template slot reference — maps to template:slot:<name> in gram store"
+    },
+    {
+      "type": "lfm_marker",
+      "pattern": "\\{\\{lfm:expand\\s*[—-]\\s*([^}]+)\\}\\}",
+      "captures": ["instruction"],
+      "edge_kind": "@delegates",
+      "note": "LFM expansion marker — delegates fill to CHAT-µ at apply time"
+    }
+  ],
+  "edges": [
+    { "from_type": "interface_decl", "to_type": "property_decl", "kind": "@contains", "condition": "sequence" },
+    { "from_type": "function_decl", "to_type": "parameter", "kind": "@contains", "condition": "sequence" },
+    { "from_type": "function_decl", "to_type": "type_ref", "kind": "@requires", "condition": "sequence" },
+    { "from_type": "function_decl", "to_type": "call_expr", "kind": "@calls", "condition": "sequence" },
+    { "from_type": "variable_decl", "to_type": "type_ref", "kind": "@requires", "condition": "sequence" },
+    { "from_type": "variable_decl", "to_type": "object_literal", "kind": "@uses", "condition": "sequence" },
+    { "from_type": "import_decl", "to_type": "interface_decl", "kind": "@enables", "condition": "file" },
+    { "from_type": "import_decl", "to_type": "function_decl", "kind": "@enables", "condition": "file" },
+    { "from_type": "import_decl", "to_type": "variable_decl", "kind": "@enables", "condition": "file" }
+  ]
+}

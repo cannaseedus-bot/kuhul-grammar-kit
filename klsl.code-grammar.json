@@ -1,0 +1,140 @@
+{
+  "language": "klsl",
+  "version": "1.0",
+  "tokens": [
+    {
+      "type": "annotation",
+      "pattern": "@(Compute|Vertex|Pixel|Fragment|PiField|ChromaKey|SVGVector|Lipschitz)(\\([^)]*\\))?",
+      "captures": [
+        "name",
+        "args"
+      ],
+      "edge_kind": "@annotates"
+    },
+    {
+      "type": "function_def",
+      "pattern": "function\\s+(\\w+)\\s*\\(",
+      "captures": [
+        "name"
+      ],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "tensor_decl",
+      "pattern": "let\\s+(\\w+)\\s*(?::\\s*[\\w<>, ]+)?\\s*=",
+      "captures": [
+        "name"
+      ],
+      "edge_kind": "@declares"
+    },
+    {
+      "type": "texture_sample",
+      "pattern": "textureSample\\s*\\(\\s*(\\w+)",
+      "captures": [
+        "texture"
+      ],
+      "edge_kind": "@samples"
+    },
+    {
+      "type": "uniform_read",
+      "pattern": "uniforms\\.(\\w+)",
+      "captures": [
+        "field"
+      ],
+      "edge_kind": "@reads"
+    },
+    {
+      "type": "return_stmt",
+      "pattern": "return\\s+\\(",
+      "captures": [],
+      "edge_kind": "@returns"
+    },
+    {
+      "type": "math_op",
+      "pattern": "\\b(exp|sqrt|cos|sin|abs|floor|length|normalize|clamp|select)\\s*\\(",
+      "captures": [
+        "fn"
+      ],
+      "edge_kind": "@calls"
+    },
+    {
+      "type": "keyword",
+      "pattern": "compute",
+      "captures": []
+    },
+    {
+      "type": "keyword",
+      "pattern": "shader",
+      "captures": []
+    },
+    {
+      "type": "keyword",
+      "pattern": "KLSL",
+      "captures": []
+    },
+    {
+      "type": "keyword",
+      "pattern": "compute",
+      "captures": []
+    },
+    {
+      "type": "keyword",
+      "pattern": "vertex",
+      "captures": []
+    }
+  ],
+  "edges": [
+    {
+      "from_type": "annotation",
+      "to_type": "function_def",
+      "kind": "@annotates",
+      "condition": "precedes"
+    },
+    {
+      "from_type": "function_def",
+      "to_type": "tensor_decl",
+      "kind": "@declares",
+      "condition": "sequence"
+    },
+    {
+      "from_type": "function_def",
+      "to_type": "return_stmt",
+      "kind": "@returns",
+      "condition": "sequence"
+    },
+    {
+      "from_type": "tensor_decl",
+      "to_type": "texture_sample",
+      "kind": "@uses",
+      "condition": "sequence"
+    },
+    {
+      "from_type": "tensor_decl",
+      "to_type": "uniform_read",
+      "kind": "@uses",
+      "condition": "sequence"
+    },
+    {
+      "from_type": "tensor_decl",
+      "to_type": "math_op",
+      "kind": "@via",
+      "condition": "sequence"
+    },
+    {
+      "from_type": "keyword",
+      "to_type": "keyword",
+      "kind": "contains",
+      "condition": "keyword in ['compute', 'shader', 'KLSL', 'compute', 'vertex']"
+    },
+    {
+      "from_type": "keyword",
+      "to_type": "keyword",
+      "kind": "contains",
+      "condition": "keyword in ['compute', 'shader', 'vertex']"
+    }
+  ],
+  "adapter_layer": "AST",
+  "ast_name": "Abstract Syntax Transpiler",
+  "downstream_execution_authority": "K'UHUL",
+  "generated": "2026-09-27T06:45:24"
+}

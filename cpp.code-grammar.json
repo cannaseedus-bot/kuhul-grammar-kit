@@ -1,0 +1,73 @@
+{
+  "language": "cpp",
+  "version": "1.0",
+  "adapter_layer": "AST",
+  "ast_name": "Abstract Syntax Transpiler",
+  "downstream_execution_authority": "K'UHUL",
+  "tokens": [
+    {
+      "type": "include",
+      "pattern": "#include\\s*[<\"]([^>\"]+)[>\"]",
+      "captures": ["path"],
+      "edge_kind": "@imports"
+    },
+    {
+      "type": "namespace_decl",
+      "pattern": "namespace\\s+([\\w:]+)\\s*\\{",
+      "captures": ["name"],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "class_decl",
+      "pattern": "(?:class|struct)\\s+(\\w+)(?:\\s*:\\s*(?:public|protected|private)\\s+([\\w:]+))?",
+      "captures": ["name", "base"],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "function_def",
+      "pattern": "(?:[\\w:*&<>]+\\s+)+([\\w:~]+)\\s*\\([^;{]*\\)\\s*(?:const\\s*)?(?:override\\s*)?(?:noexcept\\s*)?\\{",
+      "captures": ["name"],
+      "edge_kind": "@defines"
+    },
+    {
+      "type": "function_call",
+      "pattern": "([\\w:]+)\\s*\\(",
+      "captures": ["callee"],
+      "edge_kind": "@calls"
+    },
+    {
+      "type": "member_access",
+      "pattern": "(\\w+)_\\s*\\.",
+      "captures": ["object"],
+      "edge_kind": "@accesses"
+    },
+    {
+      "type": "template_inst",
+      "pattern": "std::(vector|unordered_map|optional|shared_ptr|string|array|variant)<",
+      "captures": ["container"],
+      "edge_kind": "@uses"
+    },
+    {
+      "type": "slot",
+      "pattern": "\\{\\{([\\w]+)\\}\\}",
+      "captures": ["name"],
+      "edge_kind": "@requires",
+      "note": "Template slot reference — maps to template:slot:<name> in gram store"
+    },
+    {
+      "type": "lfm_marker",
+      "pattern": "\\{\\{lfm:expand\\s*[—-]\\s*([^}]+)\\}\\}",
+      "captures": ["instruction"],
+      "edge_kind": "@delegates",
+      "note": "LFM expansion marker — delegates fill to CHAT-µ at apply time"
+    }
+  ],
+  "edges": [
+    { "from_type": "namespace_decl", "to_type": "class_decl",    "kind": "@contains",  "condition": "sequence" },
+    { "from_type": "namespace_decl", "to_type": "function_def",  "kind": "@contains",  "condition": "sequence" },
+    { "from_type": "class_decl",     "to_type": "function_def",  "kind": "@declares",  "condition": "sequence" },
+    { "from_type": "function_def",   "to_type": "function_call", "kind": "@calls",     "condition": "sequence" },
+    { "from_type": "function_def",   "to_type": "member_access", "kind": "@accesses",  "condition": "sequence" },
+    { "from_type": "include",        "to_type": "template_inst", "kind": "@enables",   "condition": "file" }
+  ]
+}

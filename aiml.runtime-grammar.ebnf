@@ -1,0 +1,48 @@
+(* KHANARY AIML Runtime Grammar v2 *)
+aiml_document = "<aiml>", { category }, "</aiml>" ;
+category = "<category>", pattern, [ that ], [ topic ], template, "</category>" ;
+pattern = "<pattern>", pattern_text, "</pattern>" ;
+that = "<that>", pattern_text, "</that>" ;
+topic = "<topic>", pattern_text, "</topic>" ;
+template = "<template>", { template_item }, "</template>" ;
+
+template_item =
+    text | srai | get_var | set_var | star | thatstar | tool_call | graph_call | mx2lm_call ;
+srai = "<srai>", pattern_text, "</srai>" ;
+get_var = "<get name=\"", ident, "\"/>" ;
+set_var = "<set name=\"", ident, "\">", text, "</set>" ;
+star = "<star", [ " index=\"", integer, "\"" ], "/>" ;
+thatstar = "<thatstar", [ " index=\"", integer, "\"" ], "/>" ;
+
+tool_call = "<tool name=\"", ident, "\">", tool_payload, "</tool>" ;
+graph_call = "<edges .../>" | "<getedge .../>" | "<traverse .../>" | "<node .../>" ;
+mx2lm_call = "<mx2lm>", mx2lm_payload, "</mx2lm>" ;
+
+mx2lm_payload = { token }, { gram_binding } ;
+gram_binding =
+    "<gram channel=\"", gram_class, "\" role=\"", gram_role, "\">",
+    gram_text,
+    "</gram>" ;
+
+gram_class =
+    "unigram" | "bigram" | "trigram" | "quadgram" |
+    "coarse_gram" | "function_gram" | "tool_gram" ;
+gram_role =
+    "semantic_address" |
+    "context_association" |
+    "structural_shape" |
+    "function_word_structure" |
+    "control_binding" |
+    "operator_binding" |
+    "tool_dispatch_intent" ;
+
+token = ident ;
+ident = ? ASCII letter/digit/underscore/hyphen/apostrophe sequence ? ;
+integer = digit, { digit } ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+text = { text_char } ;
+pattern_text = { text_char } ;
+tool_payload = { text_char } ;
+gram_text = { text_char } ;
+text_char = ? any UTF-8 char except unmatched '<' or '>' ? ;
+

@@ -1,0 +1,26 @@
+@language cpp
+@version 1.0
+@auto_edges false
+
+@token include edge_kind=@imports
+@token namespace_decl edge_kind=@defines
+@token class_decl edge_kind=@defines
+@token function_def edge_kind=@defines
+@token function_call edge_kind=@calls
+@token member_access edge_kind=@accesses
+@token template_inst edge_kind=@uses
+
+@edge namespace_decl class_decl @contains sequence
+@edge namespace_decl function_def @contains sequence
+@edge class_decl function_def @declares sequence
+@edge function_def function_call @calls sequence
+@edge function_def member_access @accesses sequence
+@edge include template_inst @enables file
+
+include[path] ::= /#include\s*[<"]([^>"]+)[>"]/ ;
+namespace_decl[name] ::= /namespace\s+([\w:]+)\s*\{/ ;
+class_decl[name,base] ::= /(?:class|struct)\s+(\w+)(?:\s*:\s*(?:public|protected|private)\s+([\w:]+))?/ ;
+function_def[name] ::= /(?:[\w:*&<>]+\s+)+([\w:~]+)\s*\([^;{]*\)\s*(?:const\s*)?(?:override\s*)?(?:noexcept\s*)?\{/ ;
+function_call[callee] ::= /([\w:]+)\s*\(/ ;
+member_access[object] ::= /(\w+)_\s*\./ ;
+template_inst[container] ::= /std::(vector|unordered_map|optional|shared_ptr|string|array|variant)</ ;
