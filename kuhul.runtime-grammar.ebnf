@@ -188,8 +188,33 @@ handle_ref ::= identifier ;
    Unfold(T) -> F_Q   (working field, not topology)
    Fold(T)   -> C_T   (collapsed back)
 
-   Fields are working semantic structures.
-   They are NOT persistent topology B.
+   F_Q is a composite structure. Its full composition:
+
+       F_Q = { N, E, V, K, W, C, Sym, ... }
+
+         N   = nodes (semantic objects from gram store / topology)
+         E   = relations between nodes
+         V   = semantic vectors (value payloads addressed by K)
+         K   = key vectors (capability/profile vectors per micronaut)
+         W   = learned weights (per micronaut)
+         C   = evidence confidence (per micronaut)
+         Sym = symbolic projections (MathML / math-mu)
+
+   The field is NOT a vector. It can CONTAIN vectors as part of
+   its semantic state.
+
+   Unfold(T) exposes T's semantic neighborhood AND its associated
+   vector representations (Q, K, V) into F_Q.
+
+   For WCR attention operating over the field:
+       Q  = vec(current task / field state)
+       K_mu = vec(Micronaut capability / semantic profile)
+       R_mu = cos(Q, K_mu)
+   If V_mu exists: K_mu -> V_mu (semantic payload addressed by key).
+   "Q/K locate relevance; W/C qualify relevance; Key addresses V; Yax admits V."
+
+   F_Q is not topology B. Accumulating vectors/nodes/relations into
+   F_Q is observation; only an authorized Xul commit mutates B.
    SC-4: field_accumulation must not call topology_mutation directly.
    ================================================================ *)
 
@@ -198,13 +223,14 @@ field_definition
     ;
 
 field_type
-    ::= "query"
-      | "semantic"
-      | "candidate"
-      | "observation"
-      | "evidence"
-      | "projection"
-      | "bounded"
+    ::= "query"           (* field anchored on a query vector Q         *)
+      | "semantic"        (* general semantic neighborhood field         *)
+      | "vector_bearing"  (* field carrying Q, K, V vector components   *)
+      | "candidate"       (* set of candidate micronaut contributions    *)
+      | "observation"     (* read-only observation over gram store       *)
+      | "evidence"        (* Ch'en evidence accumulation field           *)
+      | "projection"      (* symbolic / MathML projection field          *)
+      | "bounded"         (* field with explicit fold boundary           *)
     ;
 
 field_ref ::= identifier ;
@@ -214,8 +240,37 @@ field_accumulation ::= field_ref "<-" contribution ;
 contribution
     ::= node_ref
       | relation_ref
+      | semantic_vector
+      | key_vector_binding
+      | value_payload
       | projection
       | evidence
+    ;
+
+(* Semantic vector: a float vector associated with a named semantic entity. *)
+semantic_vector
+    ::= "vec" "(" identifier ")"
+    ;
+
+(* Query vector Q = vec(current task / field state): *)
+query_vector
+    ::= "Q" "=" "vec" "(" field_ref ")"
+    ;
+
+(* Key vector K_mu = vec(Micronaut capability / semantic profile): *)
+key_vector_binding
+    ::= "K" "(" micronaut_id ")" "=" "vec" "(" identifier ")"
+    ;
+
+(* Value payload V_mu: semantic content addressed by key K_mu.
+   K_mu -> V_mu is addressing; V_mu is what Yax admits. *)
+value_payload
+    ::= "V" "(" micronaut_id ")" "=" identifier
+    ;
+
+(* Key addressing: K -> V (not a mutation of B). *)
+key_addresses_value
+    ::= "K" "(" micronaut_id ")" "->" "V" "(" micronaut_id ")"
     ;
 
 
@@ -375,12 +430,20 @@ capability_grant       ::= "capability_granted"  capability_set ;
    - R_mu = query-conditioned relevance via cosine similarity
    - S_mu = Yax admission/selection score
 
-   Q/K locate relevance. W/C qualify relevance. Yax selects.
+   Q = vec(current task / field state)       -- from Unfold(T) -> F_Q
+   K_mu = vec(Micronaut capability / profile) -- from key_vector_binding
+   V_mu = semantic payload addressed by K_mu  -- what Yax admits
+
+   Q/K locate relevance. W/C qualify relevance. Key addresses V. Yax admits V.
 
    Q and K are inside R_mu:
        Q * K_mu  ->  R_mu
    then:
        (W_mu, C_mu, R_mu)  ->  S_mu
+
+   NOT transformer QKV: Q and K are semantic/capability vectors;
+   W and C qualify from outside relevance. V is the payload, not a
+   value projection matrix.
 
    WCR is NOT extended by usage. Usage has its own path (section 12).
 
@@ -416,8 +479,21 @@ operation_ref ::= identifier ;
 wcr_expression ::= weight "*" confidence "*" relevance ;
 weight         ::= number ;
 confidence     ::= number ;
-relevance      ::= "cos" "(" query_ref "," key_ref ")" ;
-key_ref        ::= identifier ;
+
+(* relevance R_mu = cos(Q, K_mu).
+   Q = vec(field/task); K_mu = vec(micronaut capability profile). *)
+relevance
+    ::= "cos" "(" vec_expr "," vec_expr ")"
+    ;
+
+vec_expr
+    ::= query_vector        (* Q = vec(field_ref)         *)
+      | key_vector_binding  (* K(mu) = vec(identifier)    *)
+      | semantic_vector     (* vec(identifier) -- any named vector *)
+      | key_ref             (* bare identifier for inline use *)
+    ;
+
+key_ref ::= identifier ;
 
 (* Normalize across eligible set to get selection distribution: *)
 normalized_score
