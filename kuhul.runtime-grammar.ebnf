@@ -366,13 +366,35 @@ capability_grant       ::= "capability_granted"  capability_set ;
 (* ================================================================
    11. YAX ATTENTION / WCR
 
-   R_mu(Q) = cos(Q, K_mu)
-   S_mu(Q) = W_mu * C_mu * R_mu(Q)
+   Canonical selection formula:
+       S_mu(Q) = W_mu * C_mu * R_mu(Q)
+       R_mu(Q) = cos(Q, K_mu)
 
-   Q/K locate relevance.
-   W/C qualify relevance.
-   Key addresses V.
-   Yax admits V via B_tau[h,*] fold neighborhood (section 28).
+   - W_mu = learned/reinforced weight of the micronaut/track
+   - C_mu = confidence (evidence-based; SC-8: never usage frequency)
+   - R_mu = query-conditioned relevance via cosine similarity
+   - S_mu = Yax admission/selection score
+
+   Q/K locate relevance. W/C qualify relevance. Yax selects.
+
+   Q and K are inside R_mu:
+       Q * K_mu  ->  R_mu
+   then:
+       (W_mu, C_mu, R_mu)  ->  S_mu
+
+   WCR is NOT extended by usage. Usage has its own path (section 12).
+
+   Full Yax pipeline:
+       Requirements -> Eligibility -> WCR -> Ranking -> Omega -> Yax
+
+   1. eligibility  — capability/phase gate (binary, before scoring)
+   2. wcr          — S_i = W_i * C_i * R_i  (soft score per eligible mu)
+   3. normalize    — p_i = S_i / sum_j(S_j)
+   4. entropy      — H = -sum_i(p_i * log2(p_i))
+                     H_hat = H / log2(|Eligible|)
+   5. admit        — S_i >= admission_threshold (0.35)
+                     B_tau[h,*] fold neighborhood shapes the candidate set
+
    Admission threshold: 0.35.
    ================================================================ *)
 
@@ -383,33 +405,69 @@ candidate_set ::= "[" [ candidate { "," candidate } ] "]" ;
 candidate     ::= identifier ;
 query_ref     ::= identifier ;
 
+(* Eligibility: hard binary gate applied before WCR scoring. *)
+eligibility
+    ::= "eligible" "(" micronaut_id "," operation_ref ")" "->" boolean
+    ;
+
+operation_ref ::= identifier ;
+
+(* WCR score for one eligible micronaut: *)
 wcr_expression ::= weight "*" confidence "*" relevance ;
 weight         ::= number ;
 confidence     ::= number ;
 relevance      ::= "cos" "(" query_ref "," key_ref ")" ;
 key_ref        ::= identifier ;
 
+(* Normalize across eligible set to get selection distribution: *)
+normalized_score
+    ::= "normalize" "(" wcr_expression "," candidate_set ")"
+    ;
+
+(* Routing entropy over the normalized distribution:
+   H     = -sum_i(p_i * log2(p_i))
+   H_hat = H / log2(|Eligible|)
+   Low H_hat = confident routing; high H_hat = routing uncertainty. *)
+routing_entropy
+    ::= "entropy" "(" candidate_set ")"
+    ;
+
 
 (* ================================================================
    12. USAGE != CONFIDENCE
 
-   U(k) = retrieval / familiarity frequency
-   C(k) = evidence confidence
+   Three distinct quantities — never collapse them:
+
+   U(k) = usage / retrieval frequency
+   C(k) = evidence confidence  (SC-8: only from Ch'en verification)
    V(k) = epistemic verdict
 
-   Lookup may change U.
-   Lookup MUST NOT imply delta-C.
+   Roles:
+     U(k) -> RetrievalStrength(k)
+             influences which candidates enter F_Q (pre-admission)
+     S = W * C * R
+             determines admission inside F_Q (post-retrieval)
+
+   Usage is useful for surfacing associations cheaply.
+   It does NOT enter the WCR formula.
+   Adding usage to the score (WUCR) is rejected — it conflates
+   retrieval strength with epistemic confidence.
+
+   Lookup may change U. Lookup MUST NOT change C.
    SC-8: confidence_update is ONLY triggered by evidence_score
-         derived from Ch'en verification, never from lookup alone.
+         from Ch'en verification, never from lookup alone.
    ================================================================ *)
 
-usage              ::= "usage"      "(" key_ref ")" ;
-confidence_state   ::= "confidence" "(" key_ref ")" ;
+usage              ::= "usage"            "(" key_ref ")" ;
+confidence_state   ::= "confidence"       "(" key_ref ")" ;
 verdict            ::= "UNKNOWN" | "GOOD" | "BAD" ;
-verdict_statement  ::= "verdict"    "(" key_ref ")" "=" verdict ;
-lookup             ::= "lookup"     "(" key_ref ")" ;
-usage_update       ::= "usage"      "(" key_ref ")" "<-" number ;
-confidence_update  ::= "confidence" "(" key_ref ")" "<-" evidence_score ;
+verdict_statement  ::= "verdict"          "(" key_ref ")" "=" verdict ;
+lookup             ::= "lookup"           "(" key_ref ")" ;
+usage_update       ::= "usage"            "(" key_ref ")" "<-" number ;
+retrieval_strength ::= "retrieval_strength" "(" key_ref ")" ;
+retrieval_strength_update
+                   ::= "retrieval_strength" "(" key_ref ")" "<-" number ;
+confidence_update  ::= "confidence"       "(" key_ref ")" "<-" evidence_score ;
 evidence_score     ::= number ;
 
 
