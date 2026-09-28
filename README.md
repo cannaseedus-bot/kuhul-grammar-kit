@@ -40,6 +40,7 @@ Relation-shaped data ≠ Topological relation
 | File | Description |
 |------|-------------|
 | `kuhul.runtime-grammar.ebnf` | Canonical K'UHUL π EBNF — π-1.2.0. Sections 1–23 define the language; sections 24–29 cover the implementation layer (XCFE Node ISA, KLSL glyphs, gram store, bracket programs, WCR/B_τ, NGram pipeline). SC-1..SC-20 side constraints at the bottom. |
+| `tools/grammar/mini_transpilers.py` | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |
 | `aiml.runtime-grammar.ebnf` | AIML runtime channel grammar — gram store channel bindings for ELIZA/ALICE response patterns. |
 | `cpp.code-grammar.ebnf` | C++ structural EBNF — namespace, class, function, member syntax. |
 | `cpp.code-grammar.json` | C++ AST token grammar (JSON). Includes `slot` (`{{name}}`) and `lfm_marker` token types that map to gram store keys. |
