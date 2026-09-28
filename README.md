@@ -63,6 +63,20 @@ Relation-shaped data ≠ Topological relation
 
 **WCR score** — S = W × C × R, all inputs clamped to [0,1]. W=static_weight, C=confidence, R=relevance (blended across 9 component scores). Admission threshold: 0.35.
 
+
+## Related KUHUL compiler/grammar kits
+
+KXC, KLSL, and KHLC are sibling compiler surfaces around the same K'UHUL semantic authority. Their KHANARY-V1 source surfaces live in [KHANARY-V1](https://github.com/cannaseedus-bot/KHANARY-V1.git), especially `kxc/`, `klsl/`, `khlc/`, and `grammar/`.
+
+| Kit | Role |
+|-----|------|
+| [kxc-grammar-kit](https://github.com/cannaseedus-bot/kxc-grammar-kit) | Higher-level compiler/contract surface for KXC EBNF, ASX core references, registry classes, SCX/SCXQ2/JROM/XShard contracts, and trainer-adjacent source surfaces. |
+| [klsl-grammar-kit](https://github.com/cannaseedus-bot/klsl-grammar-kit) | Shader/kernel lowering layer for `.kuhul` / `.klsl` sources, including forward/backward KLSL and generated HLSL specimens. |
+| [khlc-grammar-kit](https://github.com/cannaseedus-bot/khlc-grammar-kit) | KHL/KUHUL compiler-admission surface that emits KAST/KSON artifacts for runtime validation. |
+
+Treat KUHUL as the semantic authority, KXC as the higher-level contract/compiler surface, KLSL as the shader/kernel lowering layer, and KHLC as the KHL-to-KAST/KSON admission compiler.
+
 ## Part of
 
 [KHANARY.CPP](https://github.com/cannaseedus-bot) — K'UHUL semantic runtime stack.
+
