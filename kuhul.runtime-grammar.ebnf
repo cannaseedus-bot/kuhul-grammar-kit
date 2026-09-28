@@ -273,6 +273,64 @@ key_addresses_value
     ::= "K" "(" micronaut_id ")" "->" "V" "(" micronaut_id ")"
     ;
 
+(* ── Vector-bearing field — concrete scored form ──────────────────────
+   F_Q as a set of SemanticRecord_i indexed by gram candidates.
+   The field is NOT a vector; vectors are components inside each record.
+
+   Central semantic path:
+       F_Q -> SemanticRecord_i -> W_i*C_i*R_i -> Geometry_i
+           -> Legal_i -> YaxAdmission_i
+
+   SemanticRecord is the concrete unit that carries all five field
+   coordinates needed by the GPU admission kernel. *)
+semantic_field
+    ::= "field" field_id "{"
+            semantic_record_entry*
+        "}"
+    ;
+
+field_id ::= identifier ;
+
+semantic_record_entry
+    ::= "record" gram_ref "{"
+            vector_component
+            weight_component
+            confidence_component
+            relevance_component
+            geometry_component*
+            legality_component*
+        "}"
+    ;
+
+gram_ref ::= identifier ;
+
+vector_component
+    ::= "vector" ":" "[" number { "," number } "]"
+    ;
+
+weight_component      ::= "W" ":" number ;
+confidence_component  ::= "C" ":" number ;
+relevance_component   ::= "R" ":" number ;
+
+(* Geometry derived from the gram's semantic/geodesic vector v=(x,y,z):
+   fold_weight     = ||v||                      (geodesic reach)
+   relation_weight = sqrt(x^2+y^2) / ||v||     (equatorial component)
+   phase_weight    = 0.5 + 0.5*(z / ||v||)     (vertical component) *)
+geometry_component
+    ::= "fold_weight"     ":" number
+      | "relation_weight" ":" number
+      | "phase_weight"    ":" number
+    ;
+
+(* Legality gate — hard binary before scoring.
+   policy_ok, capable, xcfe_ok each >= 0.5 to be legal.
+   HIGH SCORE CANNOT MANUFACTURE LEGALITY.  (SC-27) *)
+legality_component
+    ::= "policy_ok" ":" boolean
+      | "capable"   ":" boolean
+      | "xcfe_ok"   ":" boolean
+    ;
+
 
 (* ================================================================
    6. TOPOLOGY B
@@ -450,13 +508,13 @@ capability_grant       ::= "capability_granted"  capability_set ;
    Full Yax pipeline:
        Requirements -> Eligibility -> WCR -> Ranking -> Omega -> Yax
 
-   1. eligibility  — capability/phase gate (binary, before scoring)
-   2. wcr          — S_i = W_i * C_i * R_i  (soft score per eligible mu)
-   3. normalize    — p_i = S_i / sum_j(S_j)
-   4. entropy      — H = -sum_i(p_i * log2(p_i))
-                     H_hat = H / log2(|Eligible|)
-   5. admit        — S_i >= admission_threshold (0.35)
-                     B_tau[h,*] fold neighborhood shapes the candidate set
+   1. eligibility  -- capability/phase gate (binary, before scoring)
+   2. wcr          -- S_i = W_i * C_i * R_i  (soft score per eligible mu)
+   3. normalize    -- p_i = S_i / sum_j(S_j)
+   4. entropy      -- H = -sum_i(p_i * log2(p_i))
+                      H_hat = H / log2(|Eligible|)
+   5. admit        -- S_i >= admission_threshold (0.35)
+                      B_tau[h,*] fold neighborhood shapes the candidate set
 
    Admission threshold: 0.35.
    ================================================================ *)
@@ -489,7 +547,7 @@ relevance
 vec_expr
     ::= query_vector        (* Q = vec(field_ref)         *)
       | key_vector_binding  (* K(mu) = vec(identifier)    *)
-      | semantic_vector     (* vec(identifier) -- any named vector *)
+      | semantic_vector     (* vec(identifier) — any named vector *)
       | key_ref             (* bare identifier for inline use *)
     ;
 
@@ -512,7 +570,7 @@ routing_entropy
 (* ================================================================
    12. USAGE != CONFIDENCE
 
-   Three distinct quantities — never collapse them:
+   Three distinct quantities -- never collapse them:
 
    U(k) = usage / retrieval frequency
    C(k) = evidence confidence  (SC-8: only from Ch'en verification)
@@ -526,7 +584,7 @@ routing_entropy
 
    Usage is useful for surfacing associations cheaply.
    It does NOT enter the WCR formula.
-   Adding usage to the score (WUCR) is rejected — it conflates
+   Adding usage to the score (WUCR) is rejected -- it conflates
    retrieval strength with epistemic confidence.
 
    Lookup may change U. Lookup MUST NOT change C.
@@ -1184,7 +1242,343 @@ field_edge_type
 
 
 (* ================================================================
-   SIDE-CONSTRAINT BLOCK  SC-1 .. SC-20
+   30. SHF — SEMANTIC HYPERNYM FOLD — IMPLEMENTATION LAYER
+
+   A Semantic Hypernym Fold is the fundamental addressable unit of
+   semantic context. It is a superordinate container whose unfolding
+   exposes its participating semantic neighborhood.
+
+   Formal definition:
+       SHF(h, tau) = < h, B_tau[h,*], N_tau(h), W_tau, State(h) >
+
+   Component meanings:
+     h          = semantic identity / superordinate (the "word for book")
+     B_tau[h,*] = typed incidence fingerprint (row of incidence matrix)
+     N_tau(h)   = neighborhood: set { e | B_tau[h,e] != 0 }
+     W_tau      = association / pattern-strength channel over relations
+     State(h)   = runtime tensor state
+
+   Membership in a fold is NOT restricted to IS-A:
+       x IS-A h
+       x PARTICIPATES-IN h
+       x SUPPORTS h
+       ... (typed per the Book declaration)
+
+   Book = addressable representation of the fold.
+   Book(h) = N(h) = SHF(h) at the semantic level.
+
+   Compression and restoration:
+       {v1, v2, ... vn, E_h}  --FOLD-->   h
+       h                      --UNFOLD--> Book(h)
+
+   Fold ADT: the same abstract object, six physical representations:
+   ================================================================ *)
+
+shf_record
+    ::= "{"
+          "h"       ":" string ","   (* semantic identity       *)
+          "tau"     ":" string ","   (* projection family       *)
+          "B_row"   ":" "[" [ number { "," number } ] "]" ","
+          "N"       ":" "[" [ string { "," string } ] "]" ","
+          "W"       ":" "[" [ number { "," number } ] "]" ","
+          "state"   ":" object
+        "}"
+    ;
+
+fold_adt_representation
+    ::= "book"        (* JSON manifest / neighborhood declaration     *)
+      | "graphml"     (* topology with all metadata                   *)
+      | "b_matrix"    (* incidence participation — exact, lossless    *)
+      | "fingerprint" (* B_tau[v,*] sparse binary SDR — lossy         *)
+      | "svg3d"       (* geometric / runtime-state projection — lossy *)
+      | "scxq2"       (* compressed execution encoding — lossless     *)
+    ;
+
+(* SC-21: The projection is not the object.
+   Lossless (ker=0): b_matrix, graphml, scxq2.
+   Lossy: fingerprint (drops node identity), svg3d (drops non-visual),
+          book (drops implementation wiring).
+   Never claim isomorphism between a lossy and a lossless representation. *)
+
+(* Unfold algebraic form:
+   Unfold(v, tau) = { e | B_tau[v, e] != 0 }
+   This is the set of contexts/edges in which v participates under tau. *)
+unfold_algebraic
+    ::= "unfold" "(" identifier "," identifier ")"
+    ;
+
+
+(* ================================================================
+   31. MACHINE STATE AND NAVIGATION — IMPLEMENTATION LAYER
+
+   Three spaces over which K'UHUL executes:
+     H   = Fold / hypergraph space       (structural, mostly read-only)
+     C_6 = discrete phase / control space (6 states)
+     X   = runtime tensor / state space  (mutable per step)
+
+   Complete machine state at time t:
+       Omega_t = ( F_h, phi_t, X_t )
+
+   One K'UHUL step:
+       Omega_{t+1} = ( F_h, next(phi_t), T_{phi_t}(F_h, X_t, Q) )
+
+   F_h is unchanged under all ordinary phases.
+   Only Xul can produce F_h -> F_h'.  (SC-22)
+
+   Navigation state Omega = (phi, T, s) -- three independent axes:
+     phi = C6 wheel position
+     T   = active semantic track (which Book is being traversed)
+     s   = 0 folded/bounded | 1 unfolded/expanded
+
+   Changing s does not advance phi.
+   Changing phi does not change s or T unless explicitly transitioned.
+
+   Phase-wheel P (cyclic left-shift, P^6 = I):
+       Pop=0 Wo=1 Yax=2 Sek=3 Ch'en=4 Xul=5
+   ================================================================ *)
+
+machine_state_record
+    ::= "{"
+          "F_h"  ":" string ","   (* fold/hypergraph identity  *)
+          "phi"  ":" phase_ref "," (* current C6 phase         *)
+          "X"    ":" object ","   (* runtime tensor state      *)
+          "T"    ":" string ","   (* active track              *)
+          "s"    ":" fold_bit     (* 0=folded | 1=unfolded     *)
+        "}"
+    ;
+
+navigation_step
+    ::= horizontal_transition    (* phi unchanged, T changes  *)
+      | vertical_transition      (* T unchanged, phi advances *)
+      | fold_operation           (* phi unchanged, s changes  *)
+    ;
+
+
+(* ================================================================
+   32. INCIDENCE MODEL — IMPLEMENTATION LAYER
+
+   Common substrate: B = build_incidence_model(V, E)
+   every edge carries its type.
+
+   Projection mask M_tau selects a column family:
+       B_tau = B * M_tau
+
+   Typed fingerprint of node v under projection tau:
+       F(v, tau) = B_tau[v, *]
+
+   Similarity (typed):
+       Sim_tau(u, v) = sim( B_tau[u,*], B_tau[v,*] )
+
+   Fold interaction (weighted node projection):
+       A_tau = B_tau * W_tau * B_tau^T
+   This is the semantic activation matrix used by Sek.
+
+   Yax admission mask (read-only, ephemeral — SC-22):
+       m_h        = Gate_Q( B_tau[h,*], W_E )
+       B_h_active = B_tau[h,*] HADAMARD m_h      (local, not persisted)
+
+   Canonical default projection family for semantic_fold:
+       tau_default = { phase_fold, semantic, governs, delegates, context }
+   Do not use all edges — bookkeeping/wiring pollute semantic signal.
+   ================================================================ *)
+
+incidence_projection
+    ::= "{"
+          "node"       ":" string ","
+          "edge_type"  ":" incidence_edge_type ","
+          [ "top_k"    ":" number "," ]
+          [ "node_b"   ":" string "," ]
+        "}"
+    ;
+
+incidence_edge_type
+    ::= "phase_fold" | "semantic" | "governs" | "delegates" | "context" | "all"
+    ;
+
+(* SC-23: edge_type SHOULD be declared in a Book contract, not hardcoded.
+   "all" is reserved for diagnostics/serialization — not semantic scoring. *)
+
+
+(* ================================================================
+   33. PHASE OPERATORS T_phi — IMPLEMENTATION LAYER
+
+   Each phase owns a typed operator over X:
+       T_Pop   : X -> X + observation          (perceive / gram read)
+       T_Wo    : X -> X + state / constraints  (allocate, declare intent)
+       T_Yax   : X -> X + admitted neighborhood(filter B_tau[h,*] by Gate_Q)
+       T_Sek   : X -> X + execution result     (compute A_h_active)
+       T_Ch'en : X -> X + certificate V        (assert / verify delta)
+       T_Xul   : X -> X'  AND optionally B_t -> B_{t+1}
+
+   Full cycle composition:
+       K = T_Xul o T_Ch'en o T_Sek o T_Yax o T_Wo o T_Pop
+       X_{n+1} = K(X_n)
+
+   Topological invariance:
+       forall phi != Xul:  T_phi(B) = B           (SC-22)
+
+   Ch'en assertion contract:
+       A = A_struct AND A_semantic AND A_state AND A_authority
+
+   A_struct:    delta-B well-formed; nodes/edges exist; types legal;
+                immutable topology untouched
+   A_semantic:  proposed relation has declared type; evidence supports it;
+                W_E is pattern-strength only, not truth
+   A_state:     tensor contract satisfied; values in bounds; no NaN
+   A_authority: evolution explicitly requested; operator has evolve
+                capability; provenance exists; scope permitted
+
+   Each assertion returns a typed tuple:
+       a_i -> (status, evidence, expected, observed, reason)
+       status in {PASS, FAIL, UNKNOWN}
+
+   UNKNOWN must never become PASS.  Missing evidence is not a pass.
+
+   Verification:
+       Verified(V) iff forall a_i in Required(A), status(a_i) = PASS
+
+   Ch'en resolution states for answer/evidence outcomes:
+       VERIFIED | CONTRADICTED | MISS | AMBIGUOUS |
+       INSUFFICIENT_CONTEXT | INVALID
+
+   MISS != WRONG.
+   CONTRADICTED = system asserted A despite evidence for NOT-A.
+   MISS = required context not sufficiently unfolded.
+   ================================================================ *)
+
+chen_certificate_record
+    ::= "{"
+          "kind"             ":" "chen.verification" ","
+          "subject"          ":" string ","
+          "topology_version" ":" number ","
+          "topology_hash"    ":" string ","
+          "candidate_delta"  ":" string ","
+          "assertions"       ":" "[" [ chen_assertion { "," chen_assertion } ] "]" ","
+          "verified"         ":" boolean ","
+          "rewrite_authorized" ":" "false"
+        "}"
+    ;
+
+chen_assertion
+    ::= "{"
+          "id"     ":" string ","
+          "status" ":" chen_status ","
+          [ "evidence" ":" string "," ]
+          [ "reason"   ":" string   ]
+        "}"
+    ;
+
+chen_status ::= "PASS" | "FAIL" | "UNKNOWN" ;
+
+chen_resolution_state
+    ::= "VERIFIED"
+      | "CONTRADICTED"
+      | "MISS"
+      | "AMBIGUOUS"
+      | "INSUFFICIENT_CONTEXT"
+      | "INVALID"
+    ;
+
+(* SC-24: rewrite_authorized MUST always be false in a Ch'en certificate.
+   Only XCFE+XulGate may set authorization; Ch'en supplies the proof,
+   not the permission. *)
+
+(* Xul compare-and-commit:
+   T_Xul(B_t, delta-B, V) =
+     B_t XOR delta-B   if Verified(V) AND Authorized(V) AND Fresh(V)
+     B_t               otherwise
+
+   Fresh(V): hash(B_current) = V.topology_hash    (SC-25) *)
+
+
+(* ================================================================
+   34. GPU SCORING LAYER — IMPLEMENTATION LAYER
+
+   CPU / GPU split:
+     CPU (AVX2)         -- mu-model token generation (llama-server)
+     GPU (D3D11 CS 5.0) -- gram/fold/semantic scoring (compute shaders)
+   Target: Intel HD 4600, DirectX 11.1, Compute Shader 5.0.
+   The GPU is doing semantic Field computation, not model inference.
+
+   attention.hlsl — semantic admission kernel (NOT transformer QKV):
+     Input:  StructuredBuffer<SemanticRecord>  stride=48 bytes (12 floats)
+     Output: BaseScore, SemanticScore, LegalMask, AdmissionMask
+     SC-26: stride MUST be exactly 48 bytes (12 x float32).
+
+   Scoring pipeline for each candidate record i:
+
+   Step 1 — Base WCR score (canonical, section 11):
+       S_i = W_i * C_i * R_i
+
+   Step 2 — Geometry modifier G_i derived from gram vector v=(x,y,z):
+       fold_i     = ||v_i||
+       relation_i = sqrt(x_i^2 + y_i^2) / fold_i
+       phase_i    = 0.5 + 0.5 * (z_i / fold_i)
+       G_i        = relation_i * fold_i * phase_i
+
+   Step 3 — Semantic score (geometry modifies WCR; does not replace it):
+       S_i^semantic = S_i * lerp(1, G_i, lambda_relation)
+
+   Step 4 — Legality gate (hard binary, evaluated BEFORE admission):
+       Legal_i = (policy_ok_i >= 0.5) AND (capable_i >= 0.5)
+                 AND (xcfe_ok_i >= 0.5)
+
+   Step 5 — Full Yax admission law:
+       Yax_i = Legal_i AND (S_i^semantic >= tau)
+
+   HIGH SCORE CANNOT MANUFACTURE LEGALITY.  (SC-27)
+   S_i = 0.999 with Legal_i = false => Yax_i = false.
+   This is the GPU equivalent of the XulGate law.
+
+   fold_compute.hlsl — elementwise weighted fold sum:
+       F_out = arc_weight * (F_A + F_B)
+   This is a GPU horizontal fold primitive. fold_compute.hlsl != Xul.
+   It transforms/bounds semantic field data; it does not persist B.
+   F_A, F_B -> C_T  while  B_out = B_in.  (SC-22)
+
+   C_i annotation:
+   The channel->W and authority->C mapping tables are RUNTIME POLICY,
+   not grammar. They must not appear as grammar productions.
+   However, C_i used in the GPU record is an AUTHORITY PRIOR, not the
+   evidence confidence produced by Ch'en. Both legitimately occupy the
+   C position in WCR, but they must be typed differently:
+       C_authority = source/authority prior (GPU scoring, pre-Ch'en)
+       C_evidence  = P(statement correct | evidence) (Ch'en output)
+   Do not conflate them. The hits->confidence mistake was exactly this.
+   ================================================================ *)
+
+geometry_layer
+    ::= "{"
+          "G"        ":" number ","   (* rel * fold * phase              *)
+          "S_base"   ":" number ","   (* W * C * R                       *)
+          "S_semantic" ":" number ","  (* S_base * lerp(1, G, lambda)    *)
+          "lambda"   ":" number        (* relation_mix in [0,1]          *)
+        "}"
+    ;
+
+yax_admission_record
+    ::= "{"
+          "i"         ":" identifier ","
+          "legal"     ":" boolean ","
+          "S_semantic" ":" number ","
+          "tau"       ":" number ","
+          "admitted"  ":" boolean       (* legal AND S_semantic >= tau   *)
+        "}"
+    ;
+
+fold_gpu_operation
+    ::= "{"
+          "op"         ":" "fold_compute" ","
+          "F_A"        ":" identifier ","
+          "F_B"        ":" identifier ","
+          "arc_weight" ":" number ","
+          "F_out"      ":" identifier    (* arc_weight * (F_A + F_B)     *)
+        "}"
+    ;
+
+
+(* ================================================================
+   SIDE-CONSTRAINT BLOCK  SC-1 .. SC-26
    tools/grammar/mini_transpilers.py enforces these.
    ================================================================ *)
 
@@ -1269,3 +1663,40 @@ field_edge_type
 (* SC-20 field_node block_intensities length.
    pred:  block_intensities always exactly length 7
           (Perceive, Model, Reason, Plan, Execute, Monitor, Evolve). *)
+
+(* SC-21 Fold ADT projection isomorphism.
+   pred:  Lossless representations (b_matrix, graphml, scxq2) may claim
+          isomorphism. Lossy ones (fingerprint, svg3d, book) must not.
+          "The projection is not the object." *)
+
+(* SC-22 Topological invariance.
+   pred:  For all phi != Xul: T_phi(B) = B.
+          Yax's admission mask is ephemeral; fold_compute.hlsl does not
+          persist topology. Only Xul commits F_h -> F_h'. *)
+
+(* SC-23 Incidence edge_type SHOULD be declared in a Book contract.
+   pred:  "all" is reserved for diagnostics/serialization; it must not
+          be used as the default for semantic scoring. *)
+
+(* SC-24 Ch'en certificate rewrite_authorized is always false.
+   pred:  A Ch'en certificate MUST carry rewrite_authorized=false.
+          Authorization is XCFE's decision, not Ch'en's. *)
+
+(* SC-25 Xul certificate freshness.
+   pred:  hash(B_current) must equal V.topology_hash before Xul applies
+          delta-B. A stale certificate must trigger re-verification,
+          not silent application. *)
+
+(* SC-26 GPU SemanticRecord stride exactly 48 bytes.
+   pred:  SemanticRecord = 12 x float32 = 48 bytes.
+          Changing field count breaks the shader StructuredBuffer stride. *)
+
+(* SC-27 High score cannot manufacture legality.
+   pred:  Yax_i = Legal_i AND (S_semantic_i >= tau).
+          Legal_i is evaluated independently of S_semantic_i.
+          S_i = 0.999 with Legal_i = false => Yax_i = false.
+          This is the semantic equivalent of the XulGate law:
+          measurement does not become authority merely because the
+          number is high.
+   reason: mirrors CommitAuthority (SC-11): score and authority are
+           independent axes; conflating them is the root failure mode. *)
