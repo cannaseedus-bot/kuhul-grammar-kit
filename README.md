@@ -87,6 +87,7 @@ KXC, KLSL, and KHLC are sibling compiler surfaces around the same K'UHUL semanti
 | Kit | Role |
 |-----|------|
 | [kxc-grammar-kit](https://github.com/cannaseedus-bot/kxc-grammar-kit) | Higher-level compiler/contract surface for KXC EBNF, ASX core references, registry classes, SCX/SCXQ2/JROM/XShard contracts, and trainer-adjacent source surfaces. |
+| [xjson-grammar-kit](https://github.com/cannaseedus-bot/xjson-grammar-kit) | Semantic JSON/XCFE contract surface for model envelopes, gram stores, proof metadata, runtime limits, UI schemas, and client-side run/verify/hash/proof calls. |
 | [klsl-grammar-kit](https://github.com/cannaseedus-bot/klsl-grammar-kit) | Shader/kernel lowering layer for `.kuhul` / `.klsl` sources, including forward/backward KLSL and generated HLSL specimens. |
 | [khlc-grammar-kit](https://github.com/cannaseedus-bot/khlc-grammar-kit) | KHL/KUHUL compiler-admission surface that emits KAST/KSON artifacts for runtime validation. |
 
@@ -95,4 +96,3 @@ Treat KUHUL as the semantic authority, KXC as the higher-level contract/compiler
 ## Part of
 
 [KHANARY.CPP](https://github.com/cannaseedus-bot) — K'UHUL semantic runtime stack.
-
