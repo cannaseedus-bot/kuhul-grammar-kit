@@ -4,6 +4,22 @@ Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0**.
 
 K'UHUL is a closed-cycle semantic execution language. It operates over semantic fields and a persistent topology B, with XCFE as the control authority and XulGate as the only topology commit boundary.
 
+## What is K'UHUL?
+
+K'UHUL is the semantic authority layer for the KHANARY stack: it defines what a program/state means, which phase it is in, which fold operations are legal, and when a proposed topology change may commit. Backends such as C++, HLSL, WGSL, Python, KLSL, KXC, KHLC, STB, and XSHARD are projections or containers around that meaning layer.
+
+The practical answer is that K'UHUL is all of these, at different layers:
+
+| View | Meaning in this kit |
+|------|---------------------|
+| Semantic execution language | The grammar defines phases, glyphs, fields, folds, authority boundaries, and valid transitions. |
+| Geometric folding theory | Horizontal folds compose work inside a phase; vertical folds move across the Pop/Wo/Yax/Sek/Ch'en/Xul cycle; topology B only changes through Xul authority. |
+| Runtime contract | XCFE supplies control/move legality, XulGate supplies commit authority, and WCR/B_tau admission scores determine whether a semantic field can execute. |
+| File/serialization surface | `.kuhul`, EBNF, KXML/XCFE blocks, KAST/KSON, and related JSON/XML artifacts are ways to carry or validate K'UHUL meaning. |
+| Style | The syntax has a recognizable authoring style, but style is only the visible surface of the semantic model. |
+
+A short definition: **K'UHUL is a phase-based semantic geometry language for executable cognition.** It models meaning as phase-gated folds over a topology, then lowers that meaning into compiler, shader, tensor, and runtime artifacts.
+
 ## Closed phase cycle
 
 ```
