@@ -1,9 +1,16 @@
 (* ================================================================
    K'UHUL π — CANONICAL EBNF
-   Version: π-1.2.0
+   Version: π-1.2.0 + tensor-bundle-grounding/v8
 
    Semantic algebra:
        <Φ, F, G, γ, θ, Π, S>
+
+   Tensor bundle grounding:
+       M  = SVG-3D base manifold / FoldGraph projection manifold
+       θ  = discrete connection on C6, with arc_weight=cos(Δθ)
+       γ  = geodesic selected under that connection, not the connection itself
+       G  = rank-p gram basis, V^tensor_p
+       Π  = projection/interior-product-shaped observation, not exterior d
 
    Closed phase cycle:
        Pop -> Wo -> Yax -> Sek -> Ch'en -> Xul -> Pop'
@@ -44,6 +51,8 @@
 program
     ::= pi_open
         declaration*
+        manifold_definition*
+        bundle_definition*
         fold_definition*
         micronaut_definition*
         semantic_cycle
@@ -96,6 +105,9 @@ xul_body   ::= "{" xul_statement*   "}" ;
    3. PHASE GEOMETRY
    C6 cyclic group. Index i carries angle i*(pi/3).
    arc_weight(from,to) = cos(angle_to - angle_from).
+   θ is the connection / parallel-transport prescription.
+   The geodesic propagator computes paths under that connection.
+   SC-1c: Connection != geodesic.
    SC-1: only four arc weights are possible.
    ================================================================ *)
 
@@ -117,6 +129,110 @@ phase_transition     ::= phase_ref "->"  phase_ref ;
 (* horizontal_transition: same phase, delta_theta=0, weight=+1.0.
    SC-2: always authorized. *)
 horizontal_transition ::= track_ref "<->" track_ref ;
+
+
+(* ================================================================
+   4A. TENSOR BUNDLE GROUNDING
+
+   K'UHUL tensor geometry is projection-only unless a later Ch'en/Xul
+   authority path commits topology. These productions make the bundle
+   calculus addressable without letting grammar manufacture truth.
+   ================================================================ *)
+
+manifold_definition
+    ::= "manifold" identifier ":" manifold_type [ "(" integer ")" ] [ manifold_body ]
+    ;
+
+manifold_body ::= "{" manifold_statement* "}" ;
+
+manifold_statement
+    ::= invariant_assertion
+      | "metric" ":" metric_kind
+      | "dimension" ":" integer
+    ;
+
+manifold_type
+    ::= "euclidean"
+      | "riemannian"
+      | "minkowski"
+      | "pi_harmonic"
+      | "geodesic"
+      | "spherical"
+      | "smooth"
+    ;
+
+metric_kind
+    ::= "flat"
+      | "conformal"
+      | "riemannian"
+      | "pseudo_riemannian"
+      | "discrete"
+    ;
+
+bundle_definition
+    ::= "bundle" identifier "over" identifier "{"
+            bundle_section*
+        "}"
+    ;
+
+bundle_section
+    ::= fiber_section
+      | connection_section
+      | geodesic_section
+      | tensor_section
+    ;
+
+fiber_section
+    ::= "fiber" "{"
+            "rank" ":" tensor_rank ","
+            "dimension" ":" integer ","
+            "stride" ":" integer
+        "}"
+    ;
+
+connection_section
+    ::= "connection" "{"
+            "type" ":" connection_type ","
+            "arc_weight" ":" expression ","
+            "holonomy" ":" holonomy_type
+        "}"
+    ;
+
+geodesic_section
+    ::= "geodesic" "{"
+            "propagator" ":" identifier ","
+            "minimizes" ":" minimization_target
+        "}"
+    ;
+
+tensor_section
+    ::= "tensor" "{"
+            "rank" ":" tensor_rank ","
+            "authority" ":" projection_authority
+        "}"
+    ;
+
+tensor_rank ::= "(" integer "," integer ")" ;
+
+connection_type
+    ::= "riemannian"
+      | "levi_civita"
+      | "discrete"
+      | "discrete_circle"
+    ;
+
+holonomy_type ::= "path_ordered" | "abelian" ;
+
+minimization_target ::= "entropy" | "action" | "length" ;
+
+projection_authority ::= "projection_only" | "semantic_authority_false" ;
+
+bundle_ref ::= identifier ;
+connection_ref ::= identifier "." "connection" ;
+geodesic_ref ::= identifier ;
+parallel_transport ::= "parallel_transport" "(" expression "," geodesic_ref "," connection_ref ")" ;
+tensor_product ::= expression "⊗" expression ;
+interior_product ::= "ι" "(" expression "," expression ")" ;
 
 (* vertical_transition: adjacent phase step, delta_theta=pi/3, weight=+0.5.
    SC-3: dist MUST equal 1; requires XCFE authorization. *)
@@ -858,6 +974,8 @@ canonical_invariant
 
 phase_statement
     ::= declaration
+      | bundle_definition
+      | manifold_definition
       | topology_read
       | fold_operation
       | field_accumulation
@@ -884,6 +1002,8 @@ declaration
     ::= immutable_declaration
       | invariant_definition
       | field_definition
+      | manifold_definition
+      | bundle_definition
     ;
 
 immutable_declaration ::= "Wo" identifier "=" value ;
@@ -909,6 +1029,12 @@ expression
       | node_ref
       | relation_ref
       | field_ref
+      | bundle_ref
+      | connection_ref
+      | geodesic_ref
+      | parallel_transport
+      | tensor_product
+      | interior_product
       | math_expression
       | "(" expression ")"
     ;

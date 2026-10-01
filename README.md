@@ -1,6 +1,6 @@
 # K'UHUL π Grammar Kit
 
-Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0**.
+Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0 + tensor-bundle-grounding/v8**.
 
 K'UHUL is a closed-cycle semantic execution language. It operates over semantic fields and a persistent topology B, with XCFE as the control authority and XulGate as the only topology commit boundary.
 
@@ -35,6 +35,19 @@ Pop → Wo → Yax → Sek → Ch'en → Xul → Pop'
 | Ch'en | Verification — evidence check, miss classification |
 | Xul | Commit — XCFE-authorized topology write |
 
+
+## Tensor bundle grounding
+
+K'UHUL now carries the same tensor-bundle grounding used by KHANARY.CPP:
+
+- **Phase θ = Connection ∇** — the C6 phase cycle is the discrete, path-ordered connection rule.
+- **Geodesic γ ≠ Connection ∇** — the geodesic propagator finds paths under the connection.
+- **TensorSubstrate = Fiber bundle** — base coordinates remain separate from fiber/tensor payloads.
+- **Gram G = tensor product rank** — multi-token grams are symbolic `V^⊗p` addresses.
+- **Projection Π ≈ interior product ι** — projection observes/contracts; it does not manufacture semantic authority.
+
+TENSOR-µ is projection-only. It may learn tensor-bundle geometry over verified FoldGraph/GML topology, but it cannot mutate semantic topology B or replace Ch'en/Xul authority.
+
 ## Fundamental laws
 
 ```
@@ -55,8 +68,9 @@ Relation-shaped data ≠ Topological relation
 
 | File | Description |
 |------|-------------|
-| `kuhul.runtime-grammar.ebnf` | Canonical K'UHUL π EBNF — π-1.2.0. Sections 1–23 define the language; sections 24–29 cover the implementation layer (XCFE Node ISA, KLSL glyphs, gram store, bracket programs, WCR/B_τ, NGram pipeline). SC-1..SC-20 side constraints at the bottom. |
-| `tools/grammar/mini_transpilers.py` | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |
+| kuhul.runtime-grammar.ebnf | Canonical K'UHUL π EBNF — π-1.2.0 plus tensor-bundle-grounding/v8. Includes bundle/manifold declarations, Phase θ as connection, geodesic-under-connection distinction, tensor product rank, and projection-only authority laws. |
+| docs/TENSOR_BUNDLE.md | Mathematical grounding for Phase θ as connection, TensorSubstrate as fiber bundle, Gram G as tensor product rank, Fold F as cotangent-shaped, and Projection Π as interior-product-shaped observation. |
+| 	ools/grammar/mini_transpilers.py | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |
 | `aiml.runtime-grammar.ebnf` | AIML runtime channel grammar — gram store channel bindings for ELIZA/ALICE response patterns. |
 | `cpp.code-grammar.ebnf` | C++ structural EBNF — namespace, class, function, member syntax. |
 | `cpp.code-grammar.json` | C++ AST token grammar (JSON). Includes `slot` (`{{name}}`) and `lfm_marker` token types that map to gram store keys. |
