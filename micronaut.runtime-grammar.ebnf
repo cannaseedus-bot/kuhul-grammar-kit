@@ -1,0 +1,178 @@
+(* ================================================================ *)
+(* KHANARY Micronaut Runtime Grammar                                *)
+(* Projection-only profile, route, tensor-slot, and JROM event layer *)
+(* ================================================================ *)
+
+micronaut_document      = { micronaut_decl | micronaut_profile_decl | route_contract_decl
+                          | aiml_pattern_decl | aiml_template_decl
+                          | scfml_pattern_decl | scfml_template_decl
+                          | key_grammar_decl | semantic_envelope_decl | comment } ;
+
+(* Micronaut declarations describe phase-scoped execution containers.  They do
+   not verify facts, commit topology, or grant semantic authority. *)
+micronaut_decl          = "micronaut" micronaut_id "{" { micronaut_section } "}" ;
+micronaut_section       = identity_section
+                        | phase_scope_section
+                        | capability_section
+                        | tensor_slot_section
+                        | route_contract_ref
+                        | micronaut_profile_ref
+                        | pattern_ref
+                        | template_ref
+                        | key_grammar_ref
+                        | sandbox_section
+                        | authority_boundary_section ;
+
+identity_section        = "identity" "{" "name" ":" string [ "," "role" ":" string ]
+                          [ "," "category" ":" string ] [ "," "version" ":" string ] "}" ;
+phase_scope_section     = "phase_scope" ":" phase_list ;
+capability_section      = "capabilities" ":" string_list ;
+sandbox_section         = "sandbox" ":" projection_object ;
+
+(* Tensor slots bind a Micronaut to a local fiber/provider address.  The slot is
+   executable/routing geometry only. *)
+tensor_slot_section     = "tensor_slot" "{" "provider" ":" tensor_provider ","
+                          "anchor" ":" string [ "," "slot_id" ":" string ]
+                          [ "," "cso" ":" cso_uri ] [ "," "semantic_authority" ":" false_lit ] "}" ;
+tensor_provider         = "UnifiedTensor" | "STBMap" | "TensorSubstrate" | identifier ;
+cso_uri                 = string ;
+
+route_contract_ref      = "route_contract" ":" route_contract_id ;
+micronaut_profile_ref   = "micronaut_profile" ":" micronaut_profile_id ;
+
+(* Profile declarations are projection-only: they may bias routing, diagnostics,
+   and presentation, but cannot claim semantic/topology/verification/commit
+   authority. *)
+micronaut_profile_decl  = "micronaut_profile" micronaut_profile_id "{"
+                          projection_only_clause
+                          [ brain_profile_section ]
+                          [ personality_section ]
+                          [ capability_grams_section ]
+                          [ progression_section ]
+                          authority_boundary_section
+                          "}" ;
+
+projection_only_clause  = "projection_only" ":" true_lit ;
+brain_profile_section   = "brain_profile" ":" projection_object ;
+personality_section     = "personality" ":" projection_object ;
+capability_grams_section = "capability_grams" ":" bounded_metric_object ;
+progression_section     = "progression" ":" progression_object ;
+
+bounded_metric_object   = "{" { metric_pair [ "," ] } "}" ;
+metric_pair             = identifier ":" bounded_number ;
+progression_object      = "{" "level" ":" nonnegative_number
+                          [ "," "title" ":" string ]
+                          [ "," "xp" ":" nonnegative_number ]
+                          [ "," "unlocked_capabilities" ":" string_list ] "}" ;
+projection_object       = "{" { projection_pair [ "," ] } "}" ;
+projection_pair         = identifier ":" value ;
+
+route_contract_decl     = "route_contract" route_contract_id "{"
+                          [ "schemes" ":" string_list ]
+                          [ "verbs" ":" relation_verb_list ]
+                          [ "aiml_patterns" ":" string_list ]
+                          [ "aiml_templates" ":" string_list ]
+                          [ "key_patterns" ":" string_list ]
+                          [ "key_templates" ":" string_list ]
+                          [ "key_grammar" ":" string_list ]
+                          [ "tokens" ":" string_list ]
+                          authority_boundary_section
+                          "}" ;
+route_contract_id       = identifier | string ;
+micronaut_profile_id    = identifier | string ;
+micronaut_id            = identifier | string ;
+
+(* Known callable grammar surfaces. These declarations make a pattern/template
+   addressable by a Micronaut. They do not verify facts or authorize execution. *)
+aiml_pattern_decl       = "aiml_pattern" pattern_id "{"
+                          "match" ":" string
+                          [ "," "role" ":" string ]
+                          [ "," "phase" ":" phase_name ]
+                          authority_boundary_section
+                          "}" ;
+aiml_template_decl      = "aiml_template" template_id "{"
+                          "body" ":" string
+                          [ "," "format" ":" string ]
+                          [ "," "phase" ":" phase_name ]
+                          authority_boundary_section
+                          "}" ;
+
+scfml_pattern_decl      = "scfml_pattern" pattern_id "{"
+                          "condition" ":" string ","
+                          "then" ":" string
+                          [ "," "else" ":" string ]
+                          [ "," "unknown" ":" string ]
+                          [ "," "epistemic_state" ":" epistemic_state ]
+                          authority_boundary_section
+                          "}" ;
+scfml_template_decl     = "scfml_template" template_id "{"
+                          "surface" ":" scfml_surface ","
+                          "body" ":" string
+                          [ "," "phase" ":" phase_name ]
+                          authority_boundary_section
+                          "}" ;
+scfml_surface           = "branch" | "pattern_learning" | "normalization" | "route" ;
+epistemic_state         = "SUPPORTED" | "CONTRADICTED" | "UNKNOWN" | "MISS" ;
+
+key_grammar_decl        = "key_grammar" key_grammar_id "{"
+                          "schema" ":" string ","
+                          "rows" ":" string_list
+                          [ "," "source" ":" string ]
+                          [ "," "pattern_learning" ":" true_lit ]
+                          authority_boundary_section
+                          "}" ;
+
+pattern_ref             = "patterns" ":" identifier_list ;
+template_ref            = "templates" ":" identifier_list ;
+key_grammar_ref         = "key_grammar" ":" identifier_list ;
+pattern_id              = identifier | string ;
+template_id             = identifier | string ;
+key_grammar_id          = identifier | string ;
+identifier_list         = "[" [ identifier { "," identifier } ] "]" ;
+
+(* JROM semantic envelopes preserve proposed or observed content with an explicit
+   epistemic type.  They are replay evidence only. *)
+semantic_envelope_decl  = "semantic_envelope" "{"
+                          "type" ":" envelope_type ","
+                          "epistemic_type" ":" epistemic_type ","
+                          "disposition" ":" string ","
+                          "status" ":" string ","
+                          "content" ":" value ","
+                          "result" ":" value ","
+                          authority_boundary_section
+                          "}" ;
+envelope_type           = "think" | "reason" | "plan" | "task" | "commands"
+                        | "sql" | "grammar" | "route" | "decision" | "memory"
+                        | "verify" | "commit" | "unknown" ;
+epistemic_type          = "observation" | "preference" | "plan" | "generated_output"
+                        | "verified_fact" | "failed_retrieval" | "capability_metric"
+                        | "execution_trace" ;
+
+authority_boundary_section = "authority_boundary" "{" 
+                          "semantic_authority" ":" false_lit ","
+                          "topology_authority" ":" false_lit ","
+                          "verification_authority" ":" false_lit ","
+                          "commit_authority" ":" false_lit
+                          "}" ;
+
+phase_list              = "[" phase_name { "," phase_name } "]" ;
+phase_name              = "Pop" | "Wo" | "Yax" | "Sek" | "Ch'en" | "Chen" | "Xul" ;
+relation_verb_list      = "[" relation_verb { "," relation_verb } "]" ;
+relation_verb           = string ;
+string_list             = "[" [ string { "," string } ] "]" ;
+
+value                   = string | number | true_lit | false_lit | null_lit
+                        | string_list | projection_object | bounded_metric_object ;
+bounded_number          = number ;  (* validator P2 requires finite 0 <= value <= 1 *)
+nonnegative_number      = number ;  (* validator P2 requires finite value >= 0 *)
+true_lit                = "true" ;
+false_lit               = "false" ;
+null_lit                = "null" ;
+identifier              = letter { letter | digit | "_" | "-" | ":" | "µ" } ;
+string                  = '"' { character } '"' ;
+number                  = [ "-" ] digit { digit } [ "." digit { digit } ] ;
+comment                 = "#" { character } newline ;
+letter                  = ? Unicode letter ? ;
+digit                   = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+character               = ? any character except unescaped quote or newline ? ;
+newline                 = ? line break ? ;

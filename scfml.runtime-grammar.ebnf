@@ -1,0 +1,101 @@
+(* KHANARY SCFML Runtime Grammar v1 *)
+(* SCFML = Semantic Control Flow Machine Learning.
+   It owns semantic control-flow surfaces and Pattern Learning admission.
+   SCFML is above XCFE: it declares branches/pattern candidates, resolves them
+   through epistemic state, then projects legal moves to XCFE. *)
+
+scfml_document = { scfml_unit } ;
+scfml_unit = scfml_branch_row | scfml_pattern_learning_row | scfml_xml_surface ;
+
+(* ── XML/AIML-compatible surface ─────────────────────────────────────── *)
+scfml_xml_surface = branch_element | detached_branch_sequence ;
+branch_element = "<branch", [ branch_attrs ], ">", { branch_part }, "</branch>" ;
+detached_branch_sequence = branch_part, { branch_part } ;
+branch_part = if_block | then_block | else_block | unknown_block ;
+if_block = "<if>", { branch_payload }, "</if>" ;
+then_block = "<then>", { branch_payload }, "</then>" ;
+else_block = "<else>", { branch_payload }, "</else>" ;
+unknown_block = "<unknown>", { branch_payload }, "</unknown>" ;
+branch_payload = aiml_pattern | aiml_template | scfml_xml_surface | branch_text ;
+aiml_pattern = "<pattern>", pattern_text, "</pattern>" ;
+aiml_template = "<template>", template_text, "</template>" ;
+branch_attrs = ? XML attributes; optional schema/key/track metadata ? ;
+branch_text = ? UTF-8 branch text excluding unmatched SCFML branch tags ? ;
+
+(* Surface normalization. Input children may arrive in any order; normalized
+   rows use canonical_order = if, then, else, unknown. *)
+normalization_rule =
+    "if/pattern=>condition"
+  | "then/template=>then_action"
+  | "else/template=>else_action"
+  | "unknown=>unknown_handler"
+  | "then/pattern=>then_pattern_candidate"
+  | "else/pattern=>else_pattern_candidate"
+  | "else/if/then=>nested_else_if"
+  | "pattern_with_branch_markup=>structural_after_normalization" ;
+
+(* ── JSON row emitted into key-grammar / gram-store surfaces ─────────── *)
+scfml_branch_row =
+    "{",
+      q_schema, ",", q_key, ",", q_condition, ",", q_then, ",", q_else,
+      [ ",", q_track ],
+      [ ",", q_epistemic_state ],
+      [ ",", q_unknown ],
+      [ ",", q_source_surface ],
+      [ ",", q_pattern_learning ],
+    "}" ;
+
+q_schema = "\"schema\":", ( "\"scfml.branch.v1\"" | "\"key.grammar.semantic_branch.v1\"" ) ;
+q_key = "\"key\":", scfml_branch_key ;
+q_condition = "\"condition\":", string ;
+q_then = "\"then\":", scfml_branch_target ;
+q_else = "\"else\":", scfml_branch_target ;
+q_track = "\"track\":", string ;
+q_epistemic_state = "\"epistemic_state\":", "\"", epistemic_state, "\"" ;
+q_unknown = "\"unknown\":", scfml_branch_target ;
+q_source_surface = "\"source_surface\":", ( "\"aiml\"" | "\"json\"" | "\"memory_event\"" ) ;
+q_pattern_learning = "\"pattern_learning\":", boolean ;
+scfml_branch_target = string | "null" ;
+scfml_branch_key = "scfml:branch:", epoch_ms, "-", sequence
+                 | "scfml:branch:", gram_text
+                 | "semantic_branch:", epoch_ms, "-", sequence
+                 | "semantic_branch:", gram_text ;
+
+(* ── Pattern Learning rows ───────────────────────────────────────────── *)
+scfml_pattern_learning_row =
+    "{",
+      "\"schema\":", "\"scfml.pattern_learning.v1\"", ",",
+      "\"source_event\":", string, ",",
+      "\"candidate_kind\":", pattern_candidate_kind, ",",
+      "\"requires\":", "\"SUPPORTED_or_user_verified\"",
+      [ ",", "\"target\":", string ],
+    "}" ;
+pattern_candidate_kind =
+    "\"aiml_pattern\"" | "\"aiml_template\"" | "\"semantic_branch\""
+  | "\"key_grammar\"" | "\"route_pattern\"" ;
+
+(* ── Epistemic branch laws ───────────────────────────────────────────── *)
+epistemic_state = "SUPPORTED" | "MISS" | "UNKNOWN" | "CONTRADICTED" ;
+scfml_law =
+    "SUPPORTED(P)=>then"
+  | "CONTRADICTED(P)=>else_as_complement"
+  | "MISS(P)!=CONTRADICTED(P)"
+  | "UNKNOWN(P)!=else"
+  | "else!=not"
+  | "contradicting_one_candidate_does_not_prove_another" ;
+
+(* ── Projection boundary ─────────────────────────────────────────────── *)
+scfml_pipeline =
+    "SCFML_surface", "->", "canonical_branch_row", "->",
+    "epistemic_resolution", "->", "XCFE_move_projection" ;
+xcfe_projection =
+    "guard" | "select_then" | "select_else" | "spawn_unknown" | "preserve"
+  | "retrieve" | "defer" | "merge" | "commit" | "rollback" ;
+
+boolean = "true" | "false" ;
+string = ? JSON string ? ;
+pattern_text = ? AIML pattern text ? ;
+template_text = ? AIML template text ? ;
+gram_text = ? ordered gram text; token order is semantic ? ;
+epoch_ms = ? milliseconds since UNIX epoch ? ;
+sequence = ? per-process sequence number ? ;

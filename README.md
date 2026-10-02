@@ -1,6 +1,6 @@
 # K'UHUL π Grammar Kit
 
-Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0 + tensor-bundle-grounding/v8**.
+Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0 + tensor-bundle-grounding/v8 + fold-algebra/v9**.
 
 K'UHUL is a closed-cycle semantic execution language. It operates over semantic fields and a persistent topology B, with XCFE as the control authority and XulGate as the only topology commit boundary.
 
@@ -19,6 +19,8 @@ The practical answer is that K'UHUL is all of these, at different layers:
 | Style | The syntax has a recognizable authoring style, but style is only the visible surface of the semantic model. |
 
 A short definition: **K'UHUL is a phase-based semantic geometry language for executable cognition.** It models meaning as phase-gated folds over a topology, then lowers that meaning into compiler, shader, tensor, and runtime artifacts.
+
+More precisely, a K'UHUL fold is an **algebraic interpretation of a semantic neighborhood**, not just a container. `Book(k) ≡ N(k)` declares the neighborhood; the fold algebra `α : F(B) -> B` determines what that neighborhood means; phase `θ` locates that interpretation in the C6 cycle; Xul collapses the verified interpretation into canonical output. See `docs/FOLD_ALGEBRA.md`.
 
 ## Closed phase cycle
 
@@ -69,9 +71,12 @@ Relation-shaped data ≠ Topological relation
 | File | Description |
 |------|-------------|
 | kuhul.runtime-grammar.ebnf | Canonical K'UHUL π EBNF — π-1.2.0 plus tensor-bundle-grounding/v8. Includes bundle/manifold declarations, Phase θ as connection, geodesic-under-connection distinction, tensor product rank, and projection-only authority laws. |
+| docs/FOLD_ALGEBRA.md | Canonical fold-as-algebra model: `Fold = meaning assigned to a semantic structure under an algebra`, with phase-local algebras for Pop through Xul. |
 | docs/TENSOR_BUNDLE.md | Mathematical grounding for Phase θ as connection, TensorSubstrate as fiber bundle, Gram G as tensor product rank, Fold F as cotangent-shaped, and Projection Π as interior-product-shaped observation. |
 | 	ools/grammar/mini_transpilers.py | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |
 | `aiml.runtime-grammar.ebnf` | AIML runtime channel grammar — gram store channel bindings for ELIZA/ALICE response patterns. |
+| `scfml.runtime-grammar.ebnf` | SCFML runtime grammar surface for semantic-control flow markup. |
+| `micronaut.runtime-grammar.ebnf` | Micronaut runtime grammar for route contracts, profile projections, tensor slots, and semantic envelopes. |
 | `cpp.code-grammar.ebnf` | C++ structural EBNF — namespace, class, function, member syntax. |
 | `cpp.code-grammar.json` | C++ AST token grammar (JSON). Includes `slot` (`{{name}}`) and `lfm_marker` token types that map to gram store keys. |
 | `typescript.code-grammar.json` | TypeScript AST token grammar (JSON). Same slot/lfm_marker additions as C++. |

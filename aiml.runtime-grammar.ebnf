@@ -1,18 +1,26 @@
-(* KHANARY AIML Runtime Grammar v2 *)
+(* KHANARY AIML Runtime Grammar v4 *)
+(* Branch/control markup is delegated to SCFML. See scfml.runtime-grammar.ebnf. *)
 aiml_document = "<aiml>", { category }, "</aiml>" ;
-category = "<category>", pattern, [ that ], [ topic ], template, "</category>" ;
-pattern = "<pattern>", pattern_text, "</pattern>" ;
+category = "<category>", ( aiml_pair | scfml_category ), "</category>" ;
+aiml_pair = pattern, [ that ], [ topic ], template ;
+scfml_category = scfml_surface_ref ;
+
+pattern = "<pattern>", { pattern_item }, "</pattern>" ;
+pattern_item = pattern_text | scfml_surface_ref ;
 that = "<that>", pattern_text, "</that>" ;
 topic = "<topic>", pattern_text, "</topic>" ;
 template = "<template>", { template_item }, "</template>" ;
 
 template_item =
-    text | srai | get_var | set_var | star | thatstar | tool_call | graph_call | mx2lm_call ;
+    text | srai | get_var | set_var | star | thatstar | tool_call | graph_call
+  | mx2lm_call | scfml_surface_ref ;
 srai = "<srai>", pattern_text, "</srai>" ;
 get_var = "<get name=\"", ident, "\"/>" ;
 set_var = "<set name=\"", ident, "\">", text, "</set>" ;
 star = "<star", [ " index=\"", integer, "\"" ], "/>" ;
 thatstar = "<thatstar", [ " index=\"", integer, "\"" ], "/>" ;
+
+scfml_surface_ref = ? SCFML semantic control-flow surface; normalized by scfml.runtime-grammar.ebnf before Pattern Learning or XCFE projection ? ;
 
 tool_call = "<tool name=\"", ident, "\">", tool_payload, "</tool>" ;
 graph_call = "<edges .../>" | "<getedge .../>" | "<traverse .../>" | "<node .../>" ;
@@ -45,4 +53,3 @@ pattern_text = { text_char } ;
 tool_payload = { text_char } ;
 gram_text = { text_char } ;
 text_char = ? any UTF-8 char except unmatched '<' or '>' ? ;
-
