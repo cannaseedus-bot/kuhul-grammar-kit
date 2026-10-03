@@ -1,6 +1,6 @@
 # K'UHUL π Grammar Kit
 
-Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0 + tensor-bundle-grounding/v8 + fold-algebra/v9**.
+Canonical EBNF for the **K'UHUL π** semantic runtime — version **π-1.2.0 + tensor-bundle-grounding/v8 + fold-algebra/v9**, with a standalone **v8.0.0** event/tensor/CSO grammar surface.
 
 K'UHUL is a closed-cycle semantic execution language. It operates over semantic fields and a persistent topology B, with XCFE as the control authority and XulGate as the only topology commit boundary.
 
@@ -81,6 +81,7 @@ Relation-shaped data ≠ Topological relation
 | File | Description |
 |------|-------------|
 | kuhul.runtime-grammar.ebnf | Canonical K'UHUL π EBNF — π-1.2.0 plus tensor-bundle-grounding/v8. Includes bundle/manifold declarations, Phase θ as connection, geodesic-under-connection distinction, tensor product rank, and projection-only authority laws. |
+| kuhul-v8.standalone.ebnf | Standalone K'UHUL v8.0.0 EBNF surface for tensor bundles, geodesic manifolds, Minkowski event declarations, Einstein contraction syntax, holographic mesh bounds, and CDATA/CSO GPU kernel dispatches. |
 | docs/FOLD_ALGEBRA.md | Canonical fold-as-algebra model: `Fold = meaning assigned to a semantic structure under an algebra`, with five fold algebras, Xul canonicalization, and heterogeneous executor contracts. |
 | docs/TENSOR_BUNDLE.md | Mathematical grounding for Phase θ as connection, TensorSubstrate as fiber bundle, Gram G as tensor product rank, Fold F as cotangent-shaped, and Projection Π as interior-product-shaped observation. |
 | 	ools/grammar/mini_transpilers.py | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |
