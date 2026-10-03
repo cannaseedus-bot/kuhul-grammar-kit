@@ -1,0 +1,112 @@
+(* ============================================================ *)
+(* Fold Binding Grammar — Concrete Syntax over JSON              *)
+(* Connects a semantic fold at a phase to a concrete executor.   *)
+(* ============================================================ *)
+
+Binding         ::= "{" BindingMember ("," BindingMember)* "}" ;
+
+BindingMember   ::= FoldKey
+                  | PhaseKey
+                  | SemanticKey
+                  | BackendKey
+                  | EntryKey
+                  | DispatchKey
+                  | ContractKey
+                  | ResourcesKey
+                  | FallbackKey
+                  | ExtensionKey ;
+
+(* -------- Semantic anchor -------- *)
+
+FoldKey         ::= '"@fold"'     ":" FoldId ;
+PhaseKey        ::= '"@phase"'    ":" Phase ;
+SemanticKey     ::= '"@semantic"' ":" SemanticTag ;
+
+FoldId          ::= String ;
+Phase           ::= '"Pop"' | '"Wo"' | '"Yax"'
+                  | '"Sek"' | ChenPhase | '"Xul"' ;
+ChenPhase       ::= '"Ch', "'", 'en"' ;
+SemanticTag     ::= String ;
+
+(* -------- Backend target -------- *)
+
+BackendKey      ::= '"@backend"' ":" Backend ;
+Backend         ::= '"hlsl"'
+                  | '"cuda"'
+                  | '"metal"'
+                  | '"wgsl"'
+                  | '"spirv"'
+                  | '"cpp"'
+                  | '"rust"'
+                  | '"wasm"'
+                  | '"scxq2"'
+                  | '"host-llm"'
+                  | CustomBackend ;
+CustomBackend   ::= String ;
+
+EntryKey        ::= '"@entry"' ":" EntryId ;
+EntryId         ::= String ;
+
+(* -------- Dispatch -------- *)
+
+DispatchKey     ::= '"@dispatch"' ":" Dispatch ;
+Dispatch        ::= Dim3
+                  | DispatchExpr ;
+Dim3            ::= "[" Integer "," Integer "," Integer "]" ;
+DispatchExpr    ::= "{" DispatchMember ("," DispatchMember)* "}" ;
+DispatchMember  ::= DimKey | BoundsKey | StrategyKey ;
+DimKey          ::= '"@dims"'     ":" Dim3 ;
+BoundsKey       ::= '"@bounds"'   ":" Bounds ;
+StrategyKey     ::= '"@strategy"' ":" Strategy ;
+
+Bounds          ::= "{" BoundMember ("," BoundMember)* "}" ;
+BoundMember     ::= MinKey | MaxKey ;
+MinKey          ::= '"@min"' ":" Integer ;
+MaxKey          ::= '"@max"' ":" Integer ;
+
+Strategy        ::= '"fixed"' | '"dynamic"' | '"adaptive"' ;
+
+(* -------- Contract -------- *)
+
+ContractKey     ::= '"@contract"' ":" Contract ;
+Contract        ::= "{" ContractMember ("," ContractMember)* "}" ;
+ContractMember  ::= PreKey | PostKey | InvariantKey | ErrorKey ;
+PreKey          ::= '"@pre"'       ":" Expr ;
+PostKey         ::= '"@post"'      ":" Expr ;
+InvariantKey    ::= '"@invariant"' ":" ExprList ;
+ErrorKey        ::= '"@errors"'    ":" ErrorList ;
+
+Expr            ::= String ; (* expression language; see docs/FOLD_BINDING.md §3 *)
+ExprList        ::= "[" String ("," String)* "]" ;
+ErrorList       ::= "[" ErrorDecl ("," ErrorDecl)* "]" ;
+ErrorDecl       ::= "{" '"@code"' ":" String ","
+                       '"@condition"' ":" String "}" ;
+
+(* -------- Resources -------- *)
+
+ResourcesKey    ::= '"@resources"' ":" Resources ;
+Resources       ::= "{" ResourceMember ("," ResourceMember)* "}" ;
+ResourceMember  ::= ThreadsKey | SharedKey | RegistersKey | TimeoutKey ;
+ThreadsKey      ::= '"@threads"'   ":" Integer ;
+SharedKey       ::= '"@shared"'    ":" Integer ;
+RegistersKey    ::= '"@registers"' ":" Integer ;
+TimeoutKey      ::= '"@timeout_ms"' ":" Integer ;
+
+(* -------- Fallback -------- *)
+
+FallbackKey     ::= '"@fallback"' ":" Fallback ;
+Fallback        ::= "{" FallbackMember ("," FallbackMember)* "}" ;
+FallbackMember  ::= TargetKey | ConditionKey ;
+TargetKey       ::= '"@target"'    ":" Backend ;
+ConditionKey    ::= '"@condition"' ":" Expr ;
+
+(* -------- Extension -------- *)
+
+ExtensionKey    ::= '"@"' Identifier ":" Value ;
+
+(* -------- Terminals -------- *)
+
+String          ::= ? JSON string ? ;
+Integer         ::= ? JSON integer ? ;
+Value           ::= ? JSON value ? ;
+Identifier      ::= ? JSON string matching [A-Za-z][A-Za-z0-9_]* ? ;

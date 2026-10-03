@@ -186,6 +186,8 @@ Rule:
 Executor implements contract; contract does not implement executor.
 ```
 
+The connective object between the semantic fold and the executor is the **Fold Binding**: it anchors `(fold, phase, semantic)`, targets `(backend, entry)`, and carries contract, dispatch, resources, and fallback. See `FOLD_BINDING.md`.
+
 A Micronaut does not have to be the fold. It advertises realized fold contracts:
 
 ```text
