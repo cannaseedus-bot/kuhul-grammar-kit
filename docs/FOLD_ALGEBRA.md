@@ -72,21 +72,40 @@ A vertical fold preserves semantic identity while changing the phase interpretat
 (k, θ_i) -> (k, θ_i+1)
 ```
 
-The closed C6 cycle is therefore six interpretive positions applied during one semantic catamorphism:
+The closed C6 cycle has six phases, but **Xul is the sixth phase, not a sixth fold**. Five semantic fold algebras transform state; Xul is the boundary/canonicalization operation that closes the cycle.
+
+The frozen semantic core is:
 
 ```text
-Pop -> Wo -> Yax -> Sek -> Ch'en -> Xul -> Pop
+K = (G_semantic, Θ, 𝒜, Π, X)
+Θ = (P, W, Y, S, C, X)
+𝒜 = (α_P, α_W, α_Y, α_S, α_C)
+```
+
+Execution law:
+
+```text
+k
+ -> N_G(k)
+ -> α_P -> B_P
+ -> α_W -> B_W
+ -> α_Y -> B_Y
+ -> α_S -> B_S
+ -> α_C -> B_C
+ -> X_Π -> k'
+
+k'_t -> P_(t+1)
 ```
 
 For the µN-RAG reasoning pipeline:
 
 ```text
-α_Pop   : F(B) -> B_trigger
-α_Wo    : F(B) -> B_state
-α_Yax   : F(B) -> B_candidate
-α_Sek   : F(B) -> B_operation
-α_Ch'en : F(B) -> B_observation
-α_Xul   : F(B) -> B_collapse
+α_P : F(B) -> B_trigger       Pop
+α_W : F(B) -> B_state         Wo
+α_Y : F(B) -> B_candidate     Yax
+α_S : F(B) -> B_operation     Sek
+α_C : F(B) -> B_observation   Ch'en
+X_Π : B_C -> k'               Xul canonicalization/commit boundary
 ```
 
 Phase angles provide geometry over relationships between interpretations:
@@ -119,3 +138,111 @@ N(k) --α / θ--> B --Xul--> k'
 ```
 
 The grouping is the neighborhood. **The fold is what the neighborhood means.**
+
+## Executor contract layer
+
+The frozen core intentionally does **not** define a universal `Execute(Fold)` interface. Semantic contracts are heterogeneous, so executor capabilities are heterogeneous too:
+
+```text
+E_θ : (contract, input, context) -> (result, evidence, status)
+```
+
+The common surface is the envelope, not the computation:
+
+```text
+EXECUTOR_REQUEST
+  phase
+  fold
+  input
+  context
+  policy
+  capabilities
+  representation?
+
+EXECUTOR_RESULT
+  phase
+  fold
+  output
+  evidence
+  confidence
+  status
+  diagnostics
+```
+
+Phase requirements:
+
+| Phase | Semantic contract | Executor must provide |
+|---|---|---|
+| Pop | Activation | Resolve `N_G(k)` and activate the relevant semantic field |
+| Wo | Constraint | Evaluate constraints and identify keep/reject state |
+| Yax | Candidate expansion | Produce candidate interpretations and evidence/weights |
+| Sek | Operation | Execute the selected XCFE operation through a deterministic or model-backed executor |
+| Ch'en | Observation | Convert operation results into normalized observations |
+| Xul | Canonicalization | Apply `Π` to observations and return canonical result/status |
+
+Rule:
+
+```text
+Executor implements contract; contract does not implement executor.
+```
+
+A Micronaut does not have to be the fold. It advertises realized fold contracts:
+
+```text
+CODE-µ
+  realizes:
+    Yax.candidate
+    Sek.CODE
+    Ch'en.observation
+
+REASON-µ
+  realizes:
+    Yax.candidate
+    Sek.INFER
+    Sek.COMPARE
+    Sek.COUNTEREXAMPLE
+    Ch'en.observation
+```
+
+Runtime selection can use the existing score:
+
+```text
+S_μ = W_μ * C_μ * R_μ(Q)
+```
+
+while the semantic operation remains `α_S`:
+
+```text
+α_S --resolve--> E_μ --execute--> B_S
+```
+
+Changing from `REASON-µ` to a deterministic `COMPARE` executor does not change the K'UHUL program.
+
+## Representation and substrate independence
+
+SCXQ2 sits between representation and executor when compression/lowering is useful:
+
+```text
+α_θ -> Rep(α_θ) -> SCXQ2 -> E_θ
+```
+
+It is bypassed when it is not useful:
+
+```text
+α_θ -> E_θ
+```
+
+A GPU realization may lower through tensor representation, SCXQ2 lanes, KXC, HLSL, and D3D11. A CPU realization may satisfy the same `α_S` contract through a different path. The complete separation is:
+
+```text
+G -> N_G(k) -> 𝒜 -> X_Π      K'UHUL semantic law
+              -> Rep(𝒜)      optional representation
+              -> E           executor contract
+              -> CPU/GPU/model/etc. replaceable substrate
+```
+
+Canonical statement: **K'UHUL is a semantic algebra over a graph with phase-indexed folds and policy-governed canonicalization; representation and physical realization remain replaceable.**
+
+```text
+A fold is the semantic transformation. Everything after that is how you choose to realize it.
+```

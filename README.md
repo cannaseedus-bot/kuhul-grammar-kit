@@ -22,6 +22,16 @@ A short definition: **K'UHUL is a phase-based semantic geometry language for exe
 
 More precisely, a K'UHUL fold is an **algebraic interpretation of a semantic neighborhood**, not just a container. `Book(k) ≡ N(k)` declares the neighborhood; the fold algebra `α : F(B) -> B` determines what that neighborhood means; phase `θ` locates that interpretation in the C6 cycle; Xul collapses the verified interpretation into canonical output. See `docs/FOLD_ALGEBRA.md`.
 
+The semantic core is frozen as:
+
+```text
+K = (G_semantic, Θ, 𝒜, Π, X)
+Θ = (P, W, Y, S, C, X)
+𝒜 = (α_P, α_W, α_Y, α_S, α_C)
+```
+
+Xul is the sixth phase, **not** a sixth fold. Pop through Ch'en are the five semantic transformation algebras; Xul is the policy-governed canonicalization/commit boundary. Executors are heterogeneous realizations behind a common envelope: `E_θ(contract, input, context) -> (result, evidence, status)`. The contract never depends on a specific CPU, GPU, model, or SCXQ2 lowering path.
+
 ## Closed phase cycle
 
 ```
@@ -71,7 +81,7 @@ Relation-shaped data ≠ Topological relation
 | File | Description |
 |------|-------------|
 | kuhul.runtime-grammar.ebnf | Canonical K'UHUL π EBNF — π-1.2.0 plus tensor-bundle-grounding/v8. Includes bundle/manifold declarations, Phase θ as connection, geodesic-under-connection distinction, tensor product rank, and projection-only authority laws. |
-| docs/FOLD_ALGEBRA.md | Canonical fold-as-algebra model: `Fold = meaning assigned to a semantic structure under an algebra`, with phase-local algebras for Pop through Xul. |
+| docs/FOLD_ALGEBRA.md | Canonical fold-as-algebra model: `Fold = meaning assigned to a semantic structure under an algebra`, with five fold algebras, Xul canonicalization, and heterogeneous executor contracts. |
 | docs/TENSOR_BUNDLE.md | Mathematical grounding for Phase θ as connection, TensorSubstrate as fiber bundle, Gram G as tensor product rank, Fold F as cotangent-shaped, and Projection Π as interior-product-shaped observation. |
 | 	ools/grammar/mini_transpilers.py | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |
 | `aiml.runtime-grammar.ebnf` | AIML runtime channel grammar — gram store channel bindings for ELIZA/ALICE response patterns. |
