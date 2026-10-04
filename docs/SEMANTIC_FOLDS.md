@@ -115,7 +115,8 @@ Unfold(h, τ) = { e | B_τ[h, e] ≠ 0 }
 ```
 
 Yax derives the query-local Active Fold Graph `𝒢_F^Q(h)`; it is ephemeral working structure,
-not a persistent topology write. See `FOLD_GRAPH.md`.
+not a persistent topology write. Folding contracts that graph into a Handle while preserving
+recoverable local structure: `Unfold(Fold(𝒢_F)) ≃ 𝒢_F` under the Fold contract. See `FOLD_GRAPH.md`.
 
 Compression and restoration:
 

@@ -84,7 +84,7 @@ Relation-shaped data ≠ Topological relation
 | kuhul-v8.standalone.ebnf | Standalone K'UHUL v8.0.0 EBNF surface for tensor bundles, geodesic manifolds, Minkowski event declarations, Einstein contraction syntax, holographic mesh bounds, and CDATA/CSO GPU kernel dispatches. |
 | fold-binding.ebnf | Concrete JSON EBNF for Fold Binding records: anchor, backend target, dispatch, contract, resources, fallback, and extension keys. |
 | docs/FOLD_ALGEBRA.md | Canonical fold-as-algebra model: `Fold = meaning assigned to a semantic structure under an algebra`, with five fold algebras, Xul canonicalization, and heterogeneous executor contracts. |
-| docs/FOLD_GRAPH.md | Fold Graph layer: `𝒢_F(h)` is the typed relational graph exposed by unfolding a Fold/Book; Yax derives the query-local Active Fold Graph `𝒢_F^Q(h)`. |
+| docs/FOLD_GRAPH.md | Fold Graph layer: `𝒢_F(h)` is the typed relational graph recoverable by unfolding a Fold Handle; Yax derives `𝒢_F^Q(h)`, and Fold contraction preserves recoverable local structure. |
 | docs/FOLD_BINDING.md | Fold Binding Grammar: the morphism layer from semantic fold/phase to backend entry, including validity rules, lifecycle, thin category, and registry contract. |
 | docs/TENSOR_BUNDLE.md | Mathematical grounding for Phase θ as connection, TensorSubstrate as fiber bundle, Gram G as tensor product rank, Fold F as cotangent-shaped, and Projection Π as interior-product-shaped observation. |
 | 	ools/grammar/mini_transpilers.py | Source-side validator/transpiler referenced by the K'UHUL side-constraint block; defaults to the KHANARY.CPP repo layout. |

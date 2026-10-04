@@ -178,7 +178,7 @@ Yax derives the Active Fold Graph for the current query:
 𝒢_F(h) --Yax / Gate_Q--> 𝒢_F^Q(h)
 ```
 
-Unfold reveals structure; it does not create semantic relationships. Fold returns the active expanded graph to a bounded representation; it does not destroy the graph. Only Xul can persist a topology delta. See `FOLD_GRAPH.md`.
+Unfold reveals structure; it does not create semantic relationships. Fold returns the active expanded graph to a bounded representation; it does not destroy the graph. Folding is recoverable contraction: `Unfold(Fold(𝒢_F)) ≃ 𝒢_F` under the Fold contract. Only Xul can persist a topology delta. See `FOLD_GRAPH.md`.
 
 For the µN-RAG reasoning pipeline:
 
