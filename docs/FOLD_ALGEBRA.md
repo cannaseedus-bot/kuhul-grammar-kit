@@ -97,6 +97,72 @@ k
 k'_t -> P_(t+1)
 ```
 
+### Fold phases are operations over a Fold
+
+The six phases do not define six kinds of fold. They define operations over the same folded semantic structure:
+
+```text
+F_h --Pop--> F_h --Wo--> F_h --Yax--> F_h --Sek--> F_h --Ch'en--> F_h --Xul--> F_h'
+```
+
+Typed phase operators:
+
+```text
+T_Pop   : perceive / activate
+T_Wo    : establish state / constraints
+T_Yax   : admit relevant neighborhood
+T_Sek   : execute operation
+T_Ch'en : verify / produce certificate
+T_Xul   : collapse / commit
+```
+
+The phase-wheel matrix satisfies `P^6 = I`, but `P` only moves the phase pointer. `T_φ` performs the semantic operation.
+
+### Full runtime coordinate system
+
+The execution-level state `(F_h, φ_t, X_t)` is necessary but not sufficient for semantic routing and learning. The full coordinate system is:
+
+```text
+𝒦_t = (F_h, φ, T, s, σ, X_t)
+```
+
+| Coordinate | Meaning |
+|---|---|
+| `F_h` | WHAT structure: fold/hypergraph structure |
+| `φ` | WHERE/WHEN in execution: C6 phase |
+| `T` | WHICH semantic space or track is active |
+| `s` | BOUNDED or EXPANDED: folded/unfolded state |
+| `σ` | HOW LEARNED/TRUSTED: N-Gram Burner learning/binding state |
+| `X_t` | CURRENT mutable runtime state |
+
+Fold/unfold is an independent axis:
+
+```text
+Handle -> unfold(T) -> Neighborhood -> Attention -> fold(T) -> C_T
+```
+
+`Fold ≠ Xul`: folding changes `s`; Xul is the only phase that may produce `F_h -> F_h'`.
+
+The N-Gram Burner therefore does not learn "six folds." It learns behavior within semantic fold structures while those structures are operated on at particular phases:
+
+```text
+τ = (F_h, φ, T, s, Q, input, operation, output, evidence)
+```
+
+Example observation:
+
+```text
+FOLD       CAUSE
+TRACK      REASON-µ
+PHASE      Sek
+STATE      unfolded
+INPUT      admitted causal neighborhood
+OPERATION  XCFE:INFER
+OUTPUT     causal candidate
+```
+
+Then `fold(REASON-µ)` compresses the learned working context back into `C_T`.
+
 For the µN-RAG reasoning pipeline:
 
 ```text

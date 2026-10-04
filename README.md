@@ -30,7 +30,7 @@ K = (G_semantic, Θ, 𝒜, Π, X)
 𝒜 = (α_P, α_W, α_Y, α_S, α_C)
 ```
 
-Xul is the sixth phase, **not** a sixth fold. Pop through Ch'en are the five semantic transformation algebras; Xul is the policy-governed canonicalization/commit boundary. Executors are heterogeneous realizations behind a common envelope: `E_θ(contract, input, context) -> (result, evidence, status)`. A **Fold Binding** connects `(fold, phase, semantic)` to `(backend, entry)` with contract, dispatch, resources, and fallback; the registry key is `(fold, phase, backend)`. The contract never depends on a specific CPU, GPU, model, or SCXQ2 lowering path. See `docs/FOLD_BINDING.md`.
+Xul is the sixth phase, **not** a sixth fold. Pop through Ch'en are the five semantic transformation algebras; Xul is the policy-governed canonicalization/commit boundary. Fold Phases are C6 operations over a Fold, not fold kinds or learning states. The full runtime coordinate is `𝒦_t = (F_h, φ, T, s, σ, X_t)`: fold structure, phase, track, folded/unfolded state, learning/binding state, and mutable execution state remain separate. Executors are heterogeneous realizations behind a common envelope: `E_θ(contract, input, context) -> (result, evidence, status)`. A **Fold Binding** connects `(fold, phase, semantic)` to `(backend, entry)` with contract, dispatch, resources, and fallback; the registry key is `(fold, phase, backend)`. The contract never depends on a specific CPU, GPU, model, or SCXQ2 lowering path. See `docs/FOLD_BINDING.md`.
 
 ## Closed phase cycle
 
