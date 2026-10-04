@@ -81,10 +81,10 @@ A_h_active = B_h_active W_E (B_h_active)^T
 ## Graph vs Field vs Space
 
 ```text
-𝒢_F = (V, E, B)
+𝒢_F = (V, E→, B)
 ```
 
-The Fold Graph answers: **what is connected here?**
+The Fold Graph answers: **what is connected here, and in which legal traversal direction?**
 
 ```text
 M_F = (𝒢_F, W, θ, tensor/state fields, ...)
@@ -93,6 +93,67 @@ M_F = (𝒢_F, W, θ, tensor/state fields, ...)
 The Fold Field answers: **what pressures, weights, and relations exist over those connections?**
 
 Fold Space answers: **where can the runtime be?**
+
+## Orientation and phase-forward traversal
+
+Graph-folding work on upward planarity is useful here because it treats orientation as a structural constraint, not merely as visual direction. K'UHUL should not call itself upward-planar; that is a specific graph-theoretic property. The imported architectural principle is narrower:
+
+```text
+W_E = strength of relationship
+O_E = permitted direction of traversal
+```
+
+A strong relationship does not imply `A ↔ B`. It may only mean `A -> B`.
+
+Examples:
+
+```text
+evidence  -> assertion
+cause     -> consequence
+premise   -> inference
+question  -> candidate
+candidate -> verification
+```
+
+The Fold Graph therefore carries directed typed edges:
+
+```text
+𝒢_F(h) = (V_h, E→_h, B_h, W_h, τ_h, Θ_h)
+```
+
+`Θ_h` carries the phase-orientation context. Runtime has two orientation axes:
+
+```text
+semantic orientation × phase orientation
+𝒢→_runtime = 𝒢→_semantic □ C→6
+```
+
+A valid path must satisfy both the semantic edge orientation and the C6 phase-forward transition law. Geometry may project the graph into SVG-3D or shader coordinates, but projection does not define execution orientation.
+
+```text
+Phase-forward: Pop -> Wo -> Yax -> Sek -> Ch'en -> Xul -> Pop'
+```
+
+An oriented edge can be represented as:
+
+```json
+{
+  "@from": "CAUSE",
+  "@to": "INFER",
+  "@type": "governs",
+  "@weight": 0.91,
+  "@orientation": "forward",
+  "@phase": "Sek"
+}
+```
+
+The authority split is:
+
+```text
+M_F        => where semantic pressure points
+𝒢→_F       => where structural paths exist
+XCFE_Π     => which path is legal now
+```
 
 Operationally, the zoom levels are:
 
@@ -157,10 +218,10 @@ Here `≃` means semantic/topological equivalence under the Fold contract, not n
 The sharpened Fold Graph shape is:
 
 ```text
-𝒢_F(h) = (V_h, E_h, B_h, W_h, τ_h)
+𝒢_F(h) = (V_h, E→_h, B_h, W_h, τ_h, Θ_h)
 ```
 
-That is, typed nodes, typed relations, incidence participation, pattern-strength channels, and the projection/context under which the graph was unfolded.
+That is, typed nodes, directed typed relations, incidence participation, pattern-strength channels, projection/context, and phase-orientation context under which the graph was unfolded.
 
 ## Fold locality and composition
 
@@ -195,4 +256,4 @@ Unfold reveals/resolves the Fold Graph already represented by Fold topology. Fol
 
 Canonical statement:
 
-> Fold Graph `𝒢_F(h)` is the typed relational structure recoverable by unfolding an addressable Fold Handle. Yax derives an Active Fold Graph `𝒢_F^Q(h)` from it for the current query; Fold contracts that working graph into a bounded semantic address with recoverable local structure, without altering persistent topology.
+> Fold Graph `𝒢_F(h)` is the directed typed relational structure recoverable by unfolding an addressable Fold Handle. Yax derives an Active Fold Graph `𝒢_F^Q(h)` from it for the current query; legal traversal must satisfy both semantic edge orientation and phase-forward orientation. Fold contracts that working graph into a bounded semantic address with recoverable local structure, without altering persistent topology.

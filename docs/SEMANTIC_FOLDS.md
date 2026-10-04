@@ -107,7 +107,7 @@ SHF(H)     — folded computational semantic unit (runtime level)
 The **Book** is the addressable representation of the fold. `Book(H) ≡ N(H) ≡ SHF(H)` at
 the semantic level; their physical encodings may differ.
 
-The **Fold Graph** is the typed relational graph exposed when that Book/Fold is unfolded:
+The **Fold Graph** is the directed typed relational graph exposed when that Book/Fold is unfolded:
 
 ```
 Unfold(h, τ) = { e | B_τ[h, e] ≠ 0 }
